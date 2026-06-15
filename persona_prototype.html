@@ -1,0 +1,3299 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>앱 프로토타입</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f4f4f0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+.wrap{display:flex;flex-direction:column;align-items:center;gap:16px}
+.phone{width:320px;height:640px;background:#fff;border-radius:44px;border:2px solid #d3d1c7;overflow:hidden;position:relative;box-shadow:0 8px 40px rgba(0,0,0,.10)}
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;transition:opacity .35s,transform .35s}
+.screen.hidden{opacity:0;pointer-events:none;transform:translateY(18px)}
+svg.icon{display:inline-block;vertical-align:middle;flex-shrink:0}
+.nav-dots{display:flex;gap:8px;justify-content:center;padding:8px 0}
+.dot{width:7px;height:7px;border-radius:50%;background:#d3d1c7;transition:background .25s,transform .25s}
+.dot.active{background:#7F77DD;transform:scale(1.3)}
+.screen-lbl{font-size:12px;color:#888780;text-align:center}
+/* splash */
+.s-splash{background:#EEEDFE;justify-content:center;align-items:center}
+.splash-icon{width:80px;height:80px;background:#7F77DD;border-radius:24px;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.splash-name{font-size:26px;font-weight:600;color:#3C3489;letter-spacing:-.5px}
+.splash-sub{font-size:13px;color:#534AB7;margin-top:5px}
+.splash-bar-wrap{width:130px;height:3px;background:#AFA9EC;border-radius:2px;margin-top:36px;overflow:hidden}
+.splash-bar{height:100%;width:0;background:#3C3489;border-radius:2px;transition:width 2s linear}
+/* gate */
+.s-gate{background:#fff;justify-content:flex-end}
+.gate-top{flex:1;background:#EEEDFE;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:0 0 36px 36px}
+.gate-icon{width:68px;height:68px;background:#7F77DD;border-radius:20px;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.gate-name{font-size:20px;font-weight:600;color:#3C3489}
+.gate-tagline{font-size:12px;color:#534AB7;margin-top:3px}
+.gate-bottom{padding:28px 24px 32px;display:flex;flex-direction:column;gap:12px}
+.btn-primary{width:100%;padding:14px;background:#7F77DD;color:#EEEDFE;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-primary:active{opacity:.8}
+.btn-secondary{width:100%;padding:14px;background:transparent;color:#534AB7;border:1.5px solid #AFA9EC;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
+.btn-secondary:active{background:#EEEDFE}
+.divider-row{display:flex;align-items:center;gap:8px}
+.div-line{flex:1;height:.5px;background:#e8e8e4}
+.div-text{font-size:11px;color:#888780}
+/* 공통 */
+.topbar{height:52px;display:flex;align-items:center;padding:0 18px;gap:10px;border-bottom:.5px solid #e8e8e4;flex-shrink:0;background:#fff}
+.topbar-back{background:none;border:none;cursor:pointer;color:#5F5E5A;display:flex;align-items:center;padding:0}
+.topbar-title{font-size:16px;font-weight:500;color:#2C2C2A}
+.home-topbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:#fff;border-bottom:.5px solid #e8e8e4;flex-shrink:0}
+.home-logo{font-size:16px;font-weight:600;color:#534AB7}
+.home-icons{display:flex;gap:16px;color:#888780}
+.home-tabbar{height:58px;background:#fff;border-top:.5px solid #e8e8e4;display:flex;align-items:center;justify-content:space-around;padding:0 6px;flex-shrink:0}
+.tab-item{display:flex;flex-direction:column;align-items:center;gap:3px;color:#B4B2A9;font-size:10px;cursor:pointer;padding:4px 10px;border-radius:10px;transition:color .15s}
+.tab-item.active{color:#7F77DD}
+.field-label{font-size:11px;font-weight:500;color:#5F5E5A;margin-bottom:6px;letter-spacing:.05em;text-transform:uppercase}
+.field-input{width:100%;padding:12px 14px;border:.5px solid #d3d1c7;border-radius:12px;font-size:14px;color:#2C2C2A;background:#fff;margin-bottom:14px;outline:none;font-family:inherit}
+.field-input:focus{border-color:#7F77DD;box-shadow:0 0 0 3px rgba(127,119,221,.12)}
+.tag{font-size:12px;padding:6px 12px;border-radius:20px;border:.5px solid #d3d1c7;color:#5F5E5A;cursor:pointer;background:#fff}
+.tag.sel{background:#EEEDFE;border-color:#AFA9EC;color:#534AB7}
+/* signup */
+.s-signup{background:#fff}
+.signup-body{flex:1;overflow-y:auto;padding:20px 20px 10px}
+.step-indicator{display:flex;gap:6px;margin-bottom:20px}
+.step-pip{flex:1;height:3px;border-radius:2px;background:#e8e8e4}
+.step-pip.done{background:#7F77DD}
+.signup-footer{padding:0 20px 22px;flex-shrink:0}
+.section-title{font-size:14px;font-weight:500;color:#2C2C2A;margin-bottom:10px}
+/* canvas editor */
+.canvas-wrap{background:#f4f4f0;border-radius:16px;overflow:hidden;margin-bottom:12px;border:.5px solid #e8e8e4}
+.canvas-tabs{display:flex;border-bottom:.5px solid #e8e8e4;background:#fff}
+.canvas-tab{flex:1;padding:8px 4px;font-size:11px;font-weight:500;color:#888780;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;background:#fff}
+.canvas-tab.active{color:#7F77DD;border-bottom-color:#7F77DD}
+.canvas-stage{display:flex;align-items:center;justify-content:center;background:#fff}
+#draw-canvas{cursor:crosshair;touch-action:none;display:block}
+.canvas-toolbar{padding:8px 10px;background:#fff;border-top:.5px solid #e8e8e4;display:flex;align-items:center;gap:6px}
+.tool-btn{width:30px;height:30px;border-radius:8px;border:.5px solid #d3d1c7;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;transition:background .12s;flex-shrink:0}
+.tool-btn.active{background:#EEEDFE;border-color:#AFA9EC}
+.color-dot{width:22px;height:22px;border-radius:50%;cursor:pointer;border:2px solid transparent;flex-shrink:0;transition:transform .12s}
+.color-dot.active{border-color:#2C2C2A;transform:scale(1.2)}
+.base-scroll{max-height:180px;overflow-y:auto;background:#fff;padding:6px}
+.base-cat-label{font-size:10px;font-weight:500;color:#888780;padding:6px 4px 4px;text-transform:uppercase;letter-spacing:.04em}
+.base-char-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:4px}
+.base-char-opt{aspect-ratio:1;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;border:2px solid transparent;background:#f4f4f0;transition:all .15s}
+.base-char-opt.sel{border-color:#7F77DD;background:#EEEDFE}
+.sticker-scroll{max-height:180px;overflow-y:auto;background:#fff;padding:6px}
+.sticker-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:4px}
+.sticker-opt{aspect-ratio:1;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;background:#f4f4f0;transition:all .12s}
+.sticker-opt:active{transform:scale(.88)}
+.preview-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.canvas-preview{width:64px;height:64px;border-radius:20px;background:#EEEDFE;border:2px solid #AFA9EC;display:flex;align-items:center;justify-content:center;font-size:36px;overflow:hidden}
+.canvas-preview img{width:100%;height:100%;object-fit:cover;border-radius:18px}
+.char-avatar img{width:100%;height:100%;object-fit:cover;border-radius:28px}
+.profile-avatar-big img{width:100%;height:100%;object-fit:cover;border-radius:24px}
+/* home */
+.s-home{background:#F7F5EF}
+.home-body{flex:1;overflow-y:auto;padding:0}
+.char-avatar{width:100px;height:100px;background:#EEEDFE;border-radius:32px;display:flex;align-items:center;justify-content:center;font-size:52px;margin-bottom:14px;border:2px solid #AFA9EC}
+.char-name{font-size:16px;font-weight:500;color:#2C2C2A;margin-bottom:3px}
+.char-handle{font-size:12px;color:#888780}
+
+/* ── Journey Hero ── */
+.journey-hero{background:linear-gradient(160deg,#EEEDFE 0%,#E8E6FF 100%);padding:24px 20px 32px;display:flex;flex-direction:column;align-items:center;position:relative;flex-shrink:0}
+.journey-hero-topbar{width:100%;display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.journey-title{font-size:13px;font-weight:600;color:#534AB7;letter-spacing:.06em;text-transform:uppercase}
+.journey-hero-avatar{width:88px;height:88px;border-radius:28px;background:#fff;border:3px solid rgba(255,255,255,.9);box-shadow:0 4px 20px rgba(127,119,221,.25);display:flex;align-items:center;justify-content:center;font-size:50px;overflow:hidden;cursor:pointer;margin-bottom:12px}
+.journey-hero-avatar img{width:100%;height:100%;object-fit:cover;border-radius:24px;display:block}
+.journey-hero-name{font-size:17px;font-weight:600;color:#3C3489;margin-bottom:4px}
+.journey-hero-tags{display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.journey-hero-tag{font-size:11px;padding:4px 10px;border-radius:20px;background:rgba(255,255,255,.7);color:#534AB7;border:.5px solid rgba(127,119,221,.3)}
+.journey-hero-edit{position:absolute;top:20px;right:18px;background:rgba(255,255,255,.7);border:.5px solid rgba(127,119,221,.3);border-radius:8px;padding:5px 10px;font-size:11px;color:#534AB7;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:4px}
+
+/* ── 타임라인 ── */
+.journey-scroll{padding:18px 16px 16px;background:#F7F5EF}
+.timeline{position:relative;padding-left:0}
+.timeline::before{content:'';position:absolute;left:12px;top:8px;bottom:8px;width:1.5px;background:linear-gradient(to bottom,#C8C4F0 0%,#e0ddd5 100%)}
+
+/* 아코디언 아이템 */
+.tl-item{position:relative;margin-bottom:10px;cursor:pointer;padding-left:32px}
+.tl-dot{position:absolute;left:7px;top:50%;transform:translateY(-50%);width:10px;height:10px;min-width:10px;min-height:10px;border-radius:50%;border:2.5px solid #F7F5EF;display:block;z-index:1}
+.tl-dot.char{background:#7F77DD}
+.tl-dot.post{background:#1D9E75}
+.tl-dot.tag{background:#EF9F27}
+
+/* 접힌 상태 — 한 줄 row */
+.tl-row{display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:14px;transition:background .12s}
+.tl-row.char-row{background:#EEEDFE}
+.tl-row.post-row{background:#E8F5EE}
+.tl-row.tag-row{background:#FFF3DC}
+.tl-row-icon{width:30px;height:30px;min-width:30px;min-height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.tl-row-icon.char{background:rgba(127,119,221,.2)}
+.tl-row-icon.post{background:rgba(29,158,117,.15)}
+.tl-row-icon.tag{background:rgba(239,159,39,.2)}
+.tl-row-text{flex:1;min-width:0}
+.tl-row-title{font-size:12px;font-weight:500;color:#2C2C2A;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-row-date{font-size:10px;color:#B4B2A9;margin-top:1px}
+.tl-row-chevron{color:#B4B2A9;transition:transform .2s;flex-shrink:0}
+.tl-row-chevron.open{transform:rotate(180deg)}
+
+/* 펼쳐진 상태 */
+.tl-detail{display:none;padding:0 2px 6px}
+.tl-detail.open{display:block}
+.tl-detail-inner{border-radius:14px;overflow:hidden;padding:12px 14px}
+.tl-detail-inner.char{background:#EEEDFE;border:.5px solid #C8C4F0}
+.tl-detail-inner.post{background:#E8F5EE;border:.5px solid #B8E8D4}
+.tl-detail-inner.tag{background:#FFF3DC;border:.5px solid #F5D98C}
+.tl-char-body{display:flex;align-items:center;gap:10px}
+.tl-char-thumb{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;background:rgba(255,255,255,.7);flex-shrink:0;overflow:hidden}
+.tl-char-thumb img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.tl-char-arrow{color:#AFA9EC;font-size:14px}
+.tl-char-desc{font-size:12px;color:#534AB7;line-height:1.5;flex:1}
+.tl-post-text{font-size:13px;color:#1C5C42;line-height:1.6;margin-bottom:8px}
+.tl-post-img{height:70px;background:rgba(255,255,255,.6);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:32px;margin-bottom:8px}
+.tl-post-tags{display:flex;flex-wrap:wrap;gap:4px}
+.tl-post-tag{font-size:10px;padding:2px 7px;border-radius:8px;background:rgba(255,255,255,.7);color:#0F6E56}
+.tl-tag-chips{display:flex;flex-wrap:wrap;gap:5px}
+.tl-tag-chip{font-size:11px;padding:4px 10px;border-radius:12px;background:rgba(255,255,255,.7);color:#854F0B}
+.tl-tag-chip.new{background:rgba(255,255,255,.9);color:#3C8C2A;border:.5px solid #9FE1CB}
+
+/* journey avatar mini (헤더용 — 이제 히어로로 대체, 하위호환) */
+.journey-avatar-mini{display:none}
+/* explore */
+.s-explore{background:#f4f4f0}
+.explore-search{padding:10px 14px;background:#fff;border-bottom:.5px solid #e8e8e4;flex-shrink:0}
+.search-bar{width:100%;padding:9px 14px;background:#f4f4f0;border:none;border-radius:20px;font-size:13px;color:#2C2C2A;outline:none;font-family:inherit}
+.explore-scroll{flex:1;overflow-y:auto;padding:10px 10px 8px}
+.masonry{column-count:2;column-gap:8px}
+.tile{break-inside:avoid;margin-bottom:8px;border-radius:16px;overflow:hidden;cursor:pointer;background:#fff;transition:transform .15s}
+.tile:active{transform:scale(.97)}
+.tile-img{display:flex;align-items:center;justify-content:center;font-size:52px}
+.tile-body{padding:8px 10px 10px}
+.tile-avatar-row{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.tile-avatar{width:20px;height:20px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+.tile-username{font-size:11px;font-weight:500;color:#444441}
+.tile-caption{font-size:11px;color:#5F5E5A;line-height:1.4}
+.tile-post-tags{display:flex;flex-wrap:wrap;gap:3px;margin-top:5px}
+.tile-post-tag{font-size:10px;padding:2px 6px;border-radius:8px;background:#f4f4f0;color:#534AB7}
+/* messages */
+.s-messages{background:#fff}
+.msg-topbar{height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border-bottom:.5px solid #e8e8e4;flex-shrink:0}
+.msg-topbar-title{font-size:16px;font-weight:600;color:#2C2C2A}
+.friends-strip{flex-shrink:0;padding:12px 14px 10px;border-bottom:.5px solid #e8e8e4;background:#fff}
+.friends-strip-label{font-size:11px;font-weight:500;color:#888780;margin-bottom:10px}
+.friends-scroll{display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.friends-scroll::-webkit-scrollbar{display:none}
+.friend-bubble{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;flex-shrink:0}
+.friend-ring{width:52px;height:52px;border-radius:16px;padding:2px;background:linear-gradient(135deg,#7F77DD,#D4537E)}
+.friend-ring.seen{background:#e8e8e4}
+.friend-inner{width:100%;height:100%;border-radius:13px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:26px}
+.friend-name{font-size:10px;color:#5F5E5A;max-width:52px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dm-list{flex:1;overflow-y:auto}
+.dm-section-label{font-size:11px;font-weight:500;color:#888780;padding:12px 16px 6px}
+.dm-list-inner{display:flex;flex-direction:column}
+.dm-row{display:flex;align-items:center;gap:12px;padding:10px 16px;cursor:pointer;transition:background .12s}
+.dm-row:active{background:#f8f8f6}
+.dm-row-avatar-wrap{position:relative;flex-shrink:0}
+.dm-row-avatar{width:50px;height:50px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:28px}
+.dm-row-online{position:absolute;bottom:1px;right:1px;width:11px;height:11px;border-radius:50%;background:#1D9E75;border:2px solid #fff}
+.dm-row-body{flex:1;min-width:0}
+.dm-row-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.dm-row-name{font-size:14px;font-weight:500;color:#2C2C2A;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dm-row-time{font-size:11px;color:#B4B2A9;flex-shrink:0;margin-left:8px}
+.dm-row-bottom{display:flex;align-items:center}
+.dm-row-preview{font-size:12px;color:#888780;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.dm-row-dot{width:9px;height:9px;border-radius:50%;background:#7F77DD;flex-shrink:0;margin-left:8px}
+.dm-row.unread .dm-row-name{font-weight:600}
+.dm-row.unread .dm-row-preview{color:#2C2C2A;font-weight:500}
+.dm-row.unread .dm-row-time{color:#7F77DD;font-weight:500}
+
+/* ── 차단 경고 모달 ── */
+.block-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.block-modal-backdrop.open{opacity:1;pointer-events:all}
+.block-modal{background:#fff;border-radius:22px;padding:24px 22px 20px;width:260px;text-align:center}
+body.dark .block-modal{background:#1C1C20}
+.block-modal-icon{font-size:36px;margin-bottom:10px}
+.block-modal-title{font-size:16px;font-weight:600;color:#2C2C2A;margin-bottom:8px;line-height:1.4}
+body.dark .block-modal-title{color:#F0EFF8}
+.block-modal-desc{font-size:13px;color:#888780;line-height:1.6;margin-bottom:20px}
+.block-modal-btn{width:100%;padding:13px;background:#7F77DD;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.block-modal-btn:active{opacity:.85}
+
+/* 친구 요청 차단 배지 (프로필에 표시) */
+.friend-req-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:4px 10px;border-radius:20px;background:#FDECEA;color:#E24B4A;margin-top:6px}
+.dm-divider{height:.5px;background:#f0efe8;margin:0 16px 0 78px}
+/* chatroom */
+.s-chatroom{background:#f4f4f0}
+.chat-topbar{height:52px;display:flex;align-items:center;padding:0 14px;gap:10px;background:#fff;border-bottom:.5px solid #e8e8e4;flex-shrink:0}
+.chat-back{background:none;border:none;cursor:pointer;color:#5F5E5A;display:flex;align-items:center;padding:0}
+.chat-avatar-sm{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.chat-peer-name{font-size:14px;font-weight:500;color:#2C2C2A;flex:1}
+.chat-messages{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:8px}
+.bubble{max-width:72%;padding:9px 13px;border-radius:18px;font-size:13px;line-height:1.5;word-break:break-word}
+.bubble.them{background:#fff;color:#2C2C2A;align-self:flex-start;border-bottom-left-radius:4px}
+.bubble.me{background:#7F77DD;color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.bubble-time{font-size:10px;color:#B4B2A9;align-self:flex-end;margin-bottom:2px}
+.bubble-time.left{align-self:flex-start}
+.chat-input-bar{height:56px;background:#fff;border-top:.5px solid #e8e8e4;display:flex;align-items:center;padding:0 12px;gap:8px;flex-shrink:0}
+.chat-input{flex:1;padding:9px 14px;background:#f4f4f0;border:none;border-radius:20px;font-size:13px;outline:none;font-family:inherit;color:#2C2C2A}
+.chat-send{width:34px;height:34px;background:#7F77DD;border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+/* profile */
+.s-profile{background:#fff}
+.profile-scroll{flex:1;overflow-y:auto}
+.profile-hero{height:150px;background:#EEEDFE;position:relative;flex-shrink:0}
+.profile-avatar-big{width:90px;height:90px;background:#fff;border-radius:28px;display:flex;align-items:center;justify-content:center;font-size:50px;border:3px solid #fff;position:absolute;bottom:-34px;left:50%;transform:translateX(-50%)}
+.profile-edit-btn{border:.5px solid #AFA9EC;border-radius:10px;padding:7px 12px;font-size:12px;color:#534AB7;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit;background:transparent}
+.profile-body{padding:44px 22px 20px}
+.profile-name{font-size:18px;font-weight:500;color:#2C2C2A;text-align:center;margin-bottom:2px}
+.profile-bio-text{font-size:12px;color:#888780;text-align:center;margin-bottom:16px}
+.identity-tag-section{margin-bottom:18px}
+.identity-tag-label{font-size:11px;font-weight:500;color:#888780;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+.identity-tags{display:flex;flex-wrap:wrap;gap:6px}
+.identity-tag{font-size:11px;padding:5px 12px;border-radius:20px;background:#EEEDFE;color:#534AB7}
+.profile-section-title{font-size:11px;font-weight:500;color:#888780;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px}
+.stat-row{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.stat-box{background:#f4f4f0;border-radius:12px;padding:14px;text-align:center}
+.stat-val{font-size:20px;font-weight:500;color:#2C2C2A}
+.stat-lbl{font-size:11px;color:#888780;margin-top:3px}
+
+/* ── 아이덴티티 전환 버튼 (탭바 중앙) ── */
+.tab-identity-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;padding:0 6px;margin-top:-14px}
+.tab-identity-avatar{width:46px;height:46px;border-radius:16px;background:#EEEDFE;border:3px solid #fff;box-shadow:0 2px 12px rgba(127,119,221,.35);display:flex;align-items:center;justify-content:center;font-size:26px;overflow:hidden;transition:transform .15s}
+.tab-identity-avatar:active{transform:scale(.93)}
+.tab-identity-avatar img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+.tab-identity-dot{position:absolute;top:0;right:4px;width:10px;height:10px;border-radius:50%;background:#EF9F27;border:2px solid #fff}
+.tab-identity-dot.hidden{display:none}
+body.dark .tab-identity-avatar{border-color:#1C1C20;background:#2A2A4A}
+body.dark .tab-identity-dot{border-color:#1C1C20}
+
+/* ── 아이덴티티 Bottom Sheet ── */
+.identity-sheet-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.4);z-index:100;opacity:0;pointer-events:none;transition:opacity .25s}
+.identity-sheet-backdrop.open{opacity:1;pointer-events:all}
+.identity-sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;z-index:101;padding:0 0 20px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.identity-sheet.open{transform:translateY(0)}
+body.dark .identity-sheet{background:#1C1C20}
+.sheet-handle{width:36px;height:4px;border-radius:2px;background:#d3d1c7;margin:12px auto 16px}
+body.dark .sheet-handle{background:#3A3A3F}
+.sheet-title{font-size:13px;font-weight:600;color:#888780;letter-spacing:.06em;text-transform:uppercase;padding:0 20px 12px}
+.identity-row{display:flex;align-items:center;gap:14px;padding:12px 20px;cursor:pointer;transition:background .12s}
+.identity-row:active{background:#f4f4f0}
+body.dark .identity-row:active{background:#252529}
+.identity-row-avatar{width:52px;height:52px;border-radius:18px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:28px;overflow:hidden;flex-shrink:0;position:relative}
+.identity-row-avatar img{width:100%;height:100%;object-fit:cover;border-radius:15px;display:block}
+.identity-row-avatar.active-id{border:2.5px solid #7F77DD}
+.identity-row-body{flex:1;min-width:0}
+.identity-row-name{font-size:14px;font-weight:500;color:#2C2C2A}
+.identity-row-tags{font-size:11px;color:#888780;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.dark .identity-row-name{color:#C8C6D8}
+body.dark .identity-row-tags{color:#555}
+.identity-row-right{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.identity-active-badge{font-size:11px;font-weight:500;color:#7F77DD;background:#EEEDFE;padding:3px 9px;border-radius:10px}
+.identity-notif-badge{width:20px;height:20px;border-radius:50%;background:#EF9F27;color:#fff;font-size:10px;font-weight:600;display:flex;align-items:center;justify-content:center}
+.identity-add-row{display:flex;align-items:center;gap:14px;padding:12px 20px;cursor:pointer;opacity:.7}
+.identity-add-row:active{opacity:1}
+.identity-add-icon{width:52px;height:52px;border-radius:18px;background:#f4f4f0;border:2px dashed #d3d1c7;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+body.dark .identity-add-icon{background:#252529;border-color:#3A3A3F}
+.identity-add-label{font-size:14px;color:#5F5E5A}
+body.dark .identity-add-label{color:#888}
+
+/* ── 다중 아이덴티티 악용 방지 ── */
+
+// 현재 활성 아이덴티티의 친구 accountId 목록 반환
+function getActiveFriendAccountIds(){
+  var aid = getActiveIdentity();
+  if(aid.friends && aid.friends.length > 0){
+    return aid.friends.map(function(f){ return f.accountId; });
+  }
+  // 샘플 데이터: 첫 번째 아이덴티티는 dmList의 친구들과 연결됨
+  if(activeIdentityIdx === 0){
+    return dmList.map(function(dm){ return dm.accountId; });
+  }
+  return [];
+}
+
+// 다른 아이덴티티들의 친구 accountId 목록 반환
+function getOtherIdentityFriendAccountIds(){
+  var result = [];
+  identities.forEach(function(id, idx){
+    if(idx === activeIdentityIdx) return;
+    var friendIds = (id.friends && id.friends.length > 0)
+      ? id.friends.map(function(f){ return f.accountId; })
+      : (idx === 0 ? dmList.map(function(dm){ return dm.accountId; }) : []);
+    result = result.concat(friendIds);
+  });
+  return result;
+}
+
+// 친구 요청 차단 체크
+// targetAccountId: 친구 요청 보내려는 유저의 accountId
+function checkFriendRequestBlock(targetAccountId, targetName){
+  var otherIds = getOtherIdentityFriendAccountIds();
+  if(otherIds.indexOf(targetAccountId) !== -1){
+    // 다른 아이덴티티에 이미 친구 → 차단
+    var otherIdName = '';
+    identities.forEach(function(id, idx){
+      if(idx === activeIdentityIdx) return;
+      var friendIds = (id.friends && id.friends.length > 0)
+        ? id.friends.map(function(f){ return f.accountId; })
+        : (idx === 0 ? dmList.map(function(dm){ return dm.accountId; }) : []);
+      if(friendIds.indexOf(targetAccountId) !== -1) otherIdName = '@'+id.nick;
+    });
+    var desc = document.getElementById('friend-block-desc');
+    if(desc) desc.innerHTML = '<strong>' + (targetName||targetAccountId) + '</strong> 은(는) 이미 다른 아이덴티티 <strong>' + otherIdName + '</strong>의 친구예요.<br><br>동일한 유저에게 여러 아이덴티티로 친구 요청을 보낼 수 없어요.';
+    document.getElementById('friend-block-modal').classList.add('open');
+    return true; // 차단됨
+  }
+  return false; // 허용
+}
+
+// 그룹 채팅 입장 차단 체크
+function checkGroupChatBlock(roomId){
+  // 샘플: roomId가 이미 다른 아이덴티티에 있는지 확인
+  var blocked = false;
+  identities.forEach(function(id, idx){
+    if(idx === activeIdentityIdx) return;
+    if(id.joinedRooms && id.joinedRooms.indexOf(roomId) !== -1) blocked = true;
+  });
+  if(blocked){
+    document.getElementById('group-block-modal').classList.add('open');
+    return true;
+  }
+  return false;
+}
+
+function closeFriendBlockModal(){
+  document.getElementById('friend-block-modal').classList.remove('open');
+}
+function closeGroupBlockModal(){
+  document.getElementById('group-block-modal').classList.remove('open');
+}
+
+// 채팅 차단 배너 표시
+function showChatBlockBanner(msg){
+  var banner = document.getElementById('chat-block-banner');
+  var text   = document.getElementById('chat-block-banner-text');
+  if(banner && text){
+    text.textContent = msg;
+    banner.classList.remove('hidden');
+  }
+}
+function hideChatBlockBanner(){
+  var banner = document.getElementById('chat-block-banner');
+  if(banner) banner.classList.add('hidden');
+}
+
+// openChat 래핑 — 1:1 DM도 다른 아이덴티티로 이미 대화 중인지 체크
+function checkDmBlock(dmIdx){
+  var dm = dmList[dmIdx];
+  if(!dm) return false;
+  var otherIds = getOtherIdentityFriendAccountIds();
+  if(otherIds.indexOf(dm.accountId) !== -1){
+    showChatBlockBanner('⚠️ 다른 아이덴티티로도 이 유저와 친구 관계예요. 현재 아이덴티티로만 대화할 수 있어요.');
+    return false; // 차단은 아니고 경고만 (이미 친구라 DM은 허용하되 배너 표시)
+  }
+  hideChatBlockBanner();
+  return false;
+}
+
+/* ── 결제/구독 시트 ── */
+.purchase-sheet{position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:24px 24px 0 0;z-index:103;padding:0 0 24px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1)}
+.purchase-sheet.open{transform:translateY(0)}
+body.dark .purchase-sheet{background:#1C1C20}
+.plan-card{border-radius:16px;padding:16px;margin:0 16px 10px;cursor:pointer;transition:all .15s;border:2px solid transparent}
+.plan-card.one-time{background:#F0EEFF;border-color:#C8C4F0}
+.plan-card.subscribe{background:#FFF3DC;border-color:#F5D98C}
+.plan-card.active-plan{border-color:#7F77DD;box-shadow:0 0 0 2px rgba(127,119,221,.2)}
+body.dark .plan-card.one-time{background:#22223A;border-color:#3A3A6A}
+body.dark .plan-card.subscribe{background:#2A2210;border-color:#4A3A10}
+.plan-card-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.plan-badge{font-size:10px;font-weight:600;padding:3px 8px;border-radius:20px;letter-spacing:.04em}
+.plan-badge.one-time{background:#7F77DD;color:#fff}
+.plan-badge.subscribe{background:#EF9F27;color:#fff}
+.plan-badge.popular{background:#E24B4A;color:#fff}
+.plan-title{font-size:15px;font-weight:600;color:#2C2C2A}
+.plan-price{font-size:20px;font-weight:700;color:#534AB7}
+.plan-price-sub{font-size:11px;color:#888780;margin-top:1px}
+.plan-desc{font-size:12px;color:#5F5E5A;line-height:1.6;margin-top:6px}
+.plan-features{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.plan-feature{font-size:11px;color:#5F5E5A;display:flex;align-items:center;gap:5px}
+.plan-feature::before{content:"✓";color:#7F77DD;font-weight:700;flex-shrink:0}
+body.dark .plan-title{color:#C8C6D8}
+body.dark .plan-price{color:#AFA9EC}
+body.dark .plan-price-sub{color:#555}
+body.dark .plan-desc{color:#888}
+body.dark .plan-feature{color:#888}
+.purchase-cta{margin:4px 16px 0;display:flex;flex-direction:column;gap:8px}
+.purchase-btn-primary{width:100%;padding:14px;background:#7F77DD;color:#fff;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit}
+.purchase-btn-primary:active{opacity:.85}
+.purchase-btn-secondary{width:100%;padding:12px;background:transparent;color:#888780;border:none;font-size:13px;cursor:pointer;font-family:inherit}
+
+/* ── 차단 경고 모달 ── */
+.block-modal-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:200;display:none;align-items:center;justify-content:center}
+.block-modal-backdrop.open{display:flex}
+.block-modal{background:#fff;border-radius:20px;padding:24px 20px;margin:0 24px;text-align:center;max-width:280px;width:100%}
+body.dark .block-modal{background:#1C1C20}
+.block-modal-icon{font-size:36px;margin-bottom:12px}
+.block-modal-title{font-size:16px;font-weight:600;color:#2C2C2A;margin-bottom:8px}
+body.dark .block-modal-title{color:#F0EFF8}
+.block-modal-desc{font-size:13px;color:#5F5E5A;line-height:1.6;margin-bottom:20px}
+body.dark .block-modal-desc{color:#888}
+.block-modal-desc strong{color:#E24B4A}
+.block-modal-btn{width:100%;padding:12px;background:#7F77DD;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:inherit}
+.block-modal-btn.danger{background:#E24B4A}
+
+/* 채팅방 차단 배너 */
+.chat-block-banner{background:#FFF0EE;border-bottom:.5px solid #F5C4B3;padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0}
+body.dark .chat-block-banner{background:#3A1515;border-color:#5A2020}
+.chat-block-banner-text{font-size:12px;color:#993C1D;line-height:1.5;flex:1}
+body.dark .chat-block-banner-text{color:#FF9980}
+.purchase-sheet-title{font-size:16px;font-weight:600;color:#2C2C2A;padding:0 20px 14px}
+body.dark .purchase-sheet-title{color:#F0EFF8}
+/* 추가 아이덴티티 잠금 행 */
+.identity-locked-row{display:flex;align-items:center;gap:14px;padding:10px 20px 4px;opacity:.9}
+.identity-locked-avatar{width:52px;height:52px;border-radius:18px;background:#f4f4f0;border:2px dashed #d3d1c7;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px}
+body.dark .identity-locked-avatar{background:#252529;border-color:#3A3A3F}
+.identity-locked-body{flex:1}
+.identity-locked-title{font-size:13px;font-weight:500;color:#5F5E5A}
+.identity-locked-desc{font-size:11px;color:#B4B2A9;margin-top:1px}
+body.dark .identity-locked-title{color:#888}
+.identity-locked-btn{font-size:11px;font-weight:500;padding:5px 10px;border-radius:10px;border:none;cursor:pointer;font-family:inherit}
+.identity-locked-btn.one-time{background:#EEEDFE;color:#534AB7}
+.identity-locked-btn.subscribe{background:#FFF3DC;color:#854F0B}
+.sheet-divider{height:.5px;background:#f0efe8;margin:4px 20px}
+body.dark .sheet-divider{background:#2E2E35}
+
+/* ── 포스트 작성 아이덴티티 선택 ── */
+.post-identity-select{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#EEEDFE;border-radius:12px;margin-bottom:12px;cursor:pointer}
+.post-identity-avatar-sm{width:32px;height:32px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;flex-shrink:0}
+.post-identity-avatar-sm img{width:100%;height:100%;object-fit:cover;border-radius:8px}
+.post-identity-name{font-size:13px;font-weight:500;color:#534AB7;flex:1}
+.post-identity-change{font-size:11px;color:#7F77DD}
+
+/* ── 다크모드 ── */
+body.dark{background:#1A1A1E}
+body.dark .phone{background:#1C1C20;border-color:#3A3A3F}
+body.dark .home-topbar,body.dark .topbar,body.dark .home-tabbar,body.dark .msg-topbar,body.dark .chat-topbar{background:#1C1C20;border-color:#2E2E35}
+body.dark .profile-scroll,body.dark .profile-body{background:#1C1C20}
+body.dark .profile-hero{background:#28284A}
+body.dark .profile-name{color:#F0EFF8}
+body.dark .profile-bio-text{color:#888780}
+body.dark .identity-tag{background:#2A2A4A;color:#AFA9EC}
+body.dark .friend-stat-box{background:#252529}
+body.dark .friend-stat-val{color:#F0EFF8}
+body.dark .profile-section-title{color:#666}
+body.dark .profile-tabs{background:#1C1C20;border-color:#2E2E35}
+body.dark .profile-tab{color:#666}
+body.dark .profile-tab.active{color:#AFA9EC;border-color:#AFA9EC}
+body.dark .settings-section-label{color:#555}
+body.dark .settings-row{background:#252529;border-color:#2E2E35}
+body.dark .settings-row-label{color:#C8C6D8}
+body.dark .settings-row-desc{color:#555}
+body.dark .settings-row-value{color:#777}
+body.dark .settings-select{background:#1C1C20;color:#C8C6D8;border-color:#3A3A3F}
+body.dark .settings-section-divider{background:#2E2E35}
+body.dark .settings-danger{color:#FF6B6B}
+body.dark .settings-body{background:#1C1C20}
+body.dark .profile-content{background:#1C1C20}
+body.dark .settings-section-label{color:#555;background:#1C1C20}
+body.dark .settings-row{background:#252529;border-color:#2E2E35}
+body.dark .settings-item{border-color:#2E2E35}
+body.dark .settings-item-icon.purple{background:#2A2A4A}
+body.dark .settings-item-icon.blue{background:#1A2A3A}
+body.dark .settings-item-icon.green{background:#162A22}
+body.dark .settings-item-icon.orange{background:#2A1E10}
+body.dark .settings-item-icon.danger{background:#3A1515}
+body.dark .settings-select{background:#2E2E35;color:#C8C6D8;border-color:#3A3A3F}
+body.dark .toggle{background:#3A3A3F}
+body.dark .toggle.on{background:#7F77DD}
+body.dark .profile-tabs{background:#1C1C20;border-color:#2E2E35}
+body.dark .profile-tab{color:#555;background:#1C1C20}
+body.dark .profile-tab.active{color:#AFA9EC;border-color:#AFA9EC;background:#1C1C20}
+body.dark .home-topbar{background:#1C1C20;border-color:#2E2E35}
+body.dark .home-logo{color:#AFA9EC}
+body.dark .profile-edit-btn{color:#AFA9EC;border-color:#3A3A6A;background:transparent}
+body.dark .home-logo{color:#AFA9EC}
+body.dark .tab-item{color:#444}
+body.dark .tab-item.active{color:#AFA9EC}
+body.dark .s-home{background:#141418}
+body.dark .journey-hero{background:linear-gradient(160deg,#28284A 0%,#1E1E3A 100%)}
+body.dark .journey-title{color:#AFA9EC}
+body.dark .journey-hero-name{color:#C8C6D8}
+body.dark .journey-hero-tag{background:rgba(127,119,221,.2);color:#AFA9EC;border-color:rgba(127,119,221,.3)}
+body.dark .journey-hero-edit{background:rgba(40,40,74,.8);color:#AFA9EC;border-color:rgba(127,119,221,.3)}
+body.dark .journey-scroll{background:#141418}
+body.dark .tl-row.char-row{background:#22223A}
+body.dark .tl-row.post-row{background:#162A22}
+body.dark .tl-row.tag-row{background:#2A2210}
+body.dark .tl-row-title{color:#C8C6D8}
+body.dark .tl-row-date{color:#555}
+body.dark .tl-detail-inner.char{background:#22223A;border-color:#3A3A6A}
+body.dark .tl-detail-inner.post{background:#162A22;border-color:#1A4A34}
+body.dark .tl-detail-inner.tag{background:#2A2210;border-color:#4A3A10}
+body.dark .tl-char-desc{color:#AFA9EC}
+body.dark .tl-post-text{color:#9FE1CB}
+body.dark .tl-post-tag{background:rgba(255,255,255,.06);color:#7FC9A9}
+body.dark .tl-tag-chip{background:rgba(255,255,255,.06);color:#D4A84B}
+body.dark .tl-tag-chip.new{background:rgba(159,225,203,.1);color:#9FE1CB}
+body.dark .tl-dot{border-color:#141418}
+body.dark .journey-scroll{background:#141418}
+
+/* ── 다크모드 메세지 화면 ── */
+body.dark .s-messages{background:#1C1C20}
+body.dark .msg-topbar{background:#1C1C20;border-color:#2E2E35}
+body.dark .msg-topbar-title{color:#F0EFF8}
+body.dark .friends-strip{background:#1C1C20;border-color:#2E2E35}
+body.dark .friends-strip-label{color:#888}
+body.dark .friend-name{color:#888}
+body.dark .friend-ring.seen{background:#3A3A3F}
+body.dark .dm-list{background:#1C1C20}
+body.dark .dm-section-label{color:#666}
+body.dark .dm-row{background:#1C1C20}
+body.dark .dm-row:active{background:#252529}
+body.dark .dm-row-name{color:#C8C6D8}
+body.dark .dm-row.unread .dm-row-name{color:#F0EFF8}
+body.dark .dm-row-preview{color:#555}
+body.dark .dm-row.unread .dm-row-preview{color:#AFA9EC}
+body.dark .dm-row-time{color:#555}
+body.dark .dm-row.unread .dm-row-time{color:#7F77DD}
+body.dark .dm-divider{background:#2E2E35}
+
+/* ── 다크모드 채팅방 ── */
+body.dark .s-chatroom{background:#141418}
+body.dark .chat-topbar{background:#1C1C20;border-color:#2E2E35}
+body.dark .chat-peer-name{color:#C8C6D8}
+body.dark .bubble.them{background:#252529;color:#C8C6D8}
+body.dark .chat-input-bar{background:#1C1C20;border-color:#2E2E35}
+body.dark .chat-input{background:#252529;color:#C8C6D8}
+body.dark .bubble-time{color:#444}
+
+/* ── 다크모드 둘러보기 ── */
+body.dark .s-explore{background:#141418}
+body.dark .explore-search{background:#1C1C20;border-color:#2E2E35}
+body.dark .search-bar{background:#252529;color:#C8C6D8}
+body.dark .tile{background:#1E1E24}
+body.dark .tile-username{color:#C8C6D8}
+body.dark .tile-caption{color:#888}
+body.dark .tile-post-tag{background:#252529;color:#AFA9EC}
+body.dark .home-topbar svg{color:#888}
+
+/* ── 다크모드 홈 탭바 ── */
+body.dark .home-tabbar{background:#1C1C20;border-color:#2E2E35}
+body.dark .tab-item{color:#444}
+body.dark .tab-item.active{color:#AFA9EC}
+
+/* ── 내 정보 탭 UI ── */
+.profile-tabs{display:flex;border-bottom:.5px solid #e8e8e4;background:#fff;flex-shrink:0}
+.profile-tab{flex:1;padding:10px 4px;font-size:13px;font-weight:500;color:#888780;text-align:center;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s}
+.profile-tab.active{color:#7F77DD;border-bottom-color:#7F77DD}
+.profile-content{flex:1;overflow-y:auto}
+
+/* ── 설정 ── */
+.settings-body{padding:14px 14px 20px;display:flex;flex-direction:column;gap:6px}
+.settings-section-label{font-size:11px;font-weight:500;color:#888780;letter-spacing:.06em;text-transform:uppercase;padding:8px 4px 4px}
+.settings-row{background:#fff;border-radius:14px;border:.5px solid #e8e8e4;overflow:hidden;margin-bottom:2px}
+.settings-item{display:flex;align-items:center;padding:13px 14px;gap:12px;border-bottom:.5px solid #f4f4f0}
+.settings-item:last-child{border-bottom:none}
+.settings-item-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.settings-item-body{flex:1;min-width:0}
+.settings-row-label{font-size:14px;color:#2C2C2A}
+.settings-row-desc{font-size:11px;color:#B4B2A9;margin-top:1px}
+.settings-row-right{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.settings-row-value{font-size:12px;color:#B4B2A9}
+.settings-select{border:none;background:#f4f4f0;color:#5F5E5A;font-size:12px;border-radius:8px;padding:4px 8px;font-family:inherit;cursor:pointer;outline:none}
+.settings-section-divider{height:.5px;background:#e8e8e4;margin:4px 0}
+
+/* 토글 스위치 */
+.toggle{width:44px;height:26px;background:#d3d1c7;border-radius:13px;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+.toggle.on{background:#7F77DD}
+.toggle::after{content:'';position:absolute;width:20px;height:20px;background:#fff;border-radius:50%;top:3px;left:3px;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle.on::after{transform:translateX(18px)}
+
+/* 위험 항목 */
+.settings-danger{color:#E24B4A!important}
+.settings-item-icon.danger{background:#FDECEA}
+.settings-item-icon.purple{background:#EEEDFE}
+.settings-item-icon.blue{background:#E8F0FE}
+.settings-item-icon.green{background:#E8F5EE}
+.settings-item-icon.orange{background:#FFF3DC}
+/* ── 프로필 편집 ── */
+.s-editprofile{background:#f4f4f0}
+.edit-body{flex:1;overflow-y:auto;padding:16px}
+.edit-avatar-section{background:#fff;border-radius:20px;border:.5px solid #e8e8e4;padding:20px;display:flex;flex-direction:column;align-items:center;gap:10px;margin-bottom:12px}
+.edit-avatar-preview{width:90px;height:90px;border-radius:28px;background:#EEEDFE;border:2px solid #AFA9EC;display:flex;align-items:center;justify-content:center;font-size:50px;overflow:hidden;cursor:pointer;position:relative}
+.edit-avatar-preview img{width:100%;height:100%;object-fit:cover;border-radius:26px}
+.edit-avatar-hint{font-size:11px;color:#888780}
+.edit-canvas-mini-wrap{width:100%;background:#f4f4f0;border-radius:14px;overflow:hidden;border:.5px solid #e8e8e4}
+.edit-canvas-tabs{display:flex;border-bottom:.5px solid #e8e8e4;background:#fff}
+.edit-canvas-tab{flex:1;padding:7px 4px;font-size:11px;font-weight:500;color:#888780;text-align:center;cursor:pointer;border-bottom:2px solid transparent;background:#fff}
+.edit-canvas-tab.active{color:#7F77DD;border-bottom-color:#7F77DD}
+.edit-base-scroll{max-height:130px;overflow-y:auto;background:#fff;padding:6px}
+.edit-sticker-scroll{max-height:130px;overflow-y:auto;background:#fff;padding:6px}
+.edit-canvas-toolbar{padding:6px 8px;background:#fff;border-top:.5px solid #e8e8e4;display:flex;align-items:center;gap:5px}
+.edit-field-section{background:#fff;border-radius:16px;border:.5px solid #e8e8e4;padding:14px;margin-bottom:12px}
+.edit-field-label{font-size:11px;font-weight:500;color:#888780;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.edit-input{width:100%;padding:10px 12px;border:.5px solid #d3d1c7;border-radius:10px;font-size:14px;color:#2C2C2A;outline:none;font-family:inherit;background:#f4f4f0}
+.edit-input:focus{border-color:#7F77DD;background:#fff}
+.edit-tag-grid{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.edit-tag{font-size:12px;padding:6px 12px;border-radius:20px;border:.5px solid #d3d1c7;color:#5F5E5A;cursor:pointer;background:#fff;transition:all .12s}
+.edit-tag.sel{background:#EEEDFE;border-color:#AFA9EC;color:#534AB7}
+.friend-stat-box{background:#f4f4f0;border-radius:12px;padding:14px;text-align:center;flex:1}
+.friend-stat-val{font-size:20px;font-weight:500;color:#2C2C2A}
+.friend-stat-lbl{font-size:11px;color:#888780;margin-top:3px}
+/* ── 프로필 편집 캔버스 ── */
+var editCtx=null, editTool='brush', editColor='#2C2C2A', editDrawing=false, editDrawStart={x:0,y:0}, editSnap=null;
+
+function initEditCanvas(){
+  var c=document.getElementById('edit-canvas');
+  if(!c||editCtx) return;
+  editCtx=c.getContext('2d');
+  editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130);
+  c.addEventListener('pointerdown',function(e){ editDrawing=true; var p=getEditPos(e); editCtx.beginPath(); editCtx.moveTo(p.x,p.y); if(editTool==='circle'||editTool==='rect'){ editDrawStart={x:p.x,y:p.y}; editSnap=editCtx.getImageData(0,0,278,130); } });
+  c.addEventListener('pointermove',function(e){ if(!editDrawing) return; var p=getEditPos(e);
+    if(editTool==='brush'){ editCtx.strokeStyle=editColor; editCtx.lineWidth=4; editCtx.lineCap='round'; editCtx.lineTo(p.x,p.y); editCtx.stroke(); editCtx.beginPath(); editCtx.moveTo(p.x,p.y); }
+    else if(editTool==='eraser'){ editCtx.strokeStyle='#fff'; editCtx.lineWidth=18; editCtx.lineCap='round'; editCtx.lineTo(p.x,p.y); editCtx.stroke(); editCtx.beginPath(); editCtx.moveTo(p.x,p.y); }
+    else if(editTool==='circle'||editTool==='rect'){ editCtx.putImageData(editSnap,0,0); editCtx.strokeStyle=editColor; editCtx.lineWidth=3; editCtx.beginPath();
+      if(editTool==='circle'){ var rx=(p.x-editDrawStart.x)/2,ry=(p.y-editDrawStart.y)/2; editCtx.ellipse(editDrawStart.x+rx,editDrawStart.y+ry,Math.abs(rx),Math.abs(ry),0,0,2*Math.PI); }
+      else{ editCtx.rect(editDrawStart.x,editDrawStart.y,p.x-editDrawStart.x,p.y-editDrawStart.y); } editCtx.stroke(); }
+  });
+  c.addEventListener('pointerup',function(){ editDrawing=false; updateEditPreview(); });
+  c.addEventListener('pointerleave',function(){ editDrawing=false; });
+}
+function getEditPos(e){ var r=document.getElementById('edit-canvas').getBoundingClientRect(); var sx=278/r.width; return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sx}; }
+function setEditTool(t){ editTool=t; document.querySelectorAll('[id^="etool-"]').forEach(function(b){b.classList.remove('active');}); var el=document.getElementById('etool-'+t); if(el) el.classList.add('active'); }
+function setEditColor(c,el){ editColor=c; el.closest('.edit-canvas-toolbar').querySelectorAll('.color-dot').forEach(function(d){d.classList.remove('active');}); el.classList.add('active'); if(editTool==='eraser') setEditTool('brush'); }
+function clearEditCanvas(){ if(editCtx){ editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130); updateEditPreview(); } }
+function pickEditBase(el,emoji){
+  document.querySelectorAll('#edit-canvas-base .base-char-opt').forEach(function(e){e.classList.remove('sel');}); el.classList.add('sel');
+  if(!editCtx) return;
+  editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130);
+  if(emoji){ editCtx.font='78px serif'; editCtx.textAlign='center'; editCtx.textBaseline='middle'; editCtx.fillText(emoji,139,65); editCtx.textAlign='start'; editCtx.textBaseline='alphabetic'; }
+  updateEditPreview();
+}
+function addEditSticker(s){ if(!editCtx) return; editCtx.font='36px serif'; editCtx.fillText(s,60+Math.random()*120,30+Math.random()*80); updateEditPreview(); }
+function switchEditTab(tab,el){
+  document.querySelectorAll('.edit-canvas-tab').forEach(function(t){t.classList.remove('active');}); el.classList.add('active');
+  document.getElementById('edit-canvas-draw').style.display=tab==='draw'?'block':'none';
+  document.getElementById('edit-canvas-base').style.display=tab==='base'?'block':'none';
+  document.getElementById('edit-canvas-sticker').style.display=tab==='sticker'?'block':'none';
+}
+function updateEditPreview(){
+  if(!editCtx) return;
+  var c=document.getElementById('edit-canvas');
+  var dataUrl=c.toDataURL('image/png');
+  var prev=document.getElementById('edit-avatar-preview');
+  prev.innerHTML=''; prev.style.fontSize='0';
+  var img=document.createElement('img'); img.src=dataUrl;
+  img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:26px;display:block;';
+  prev.appendChild(img);
+}
+function toggleEditTag(el){ el.classList.toggle('sel'); }
+
+function openEditProfile(){
+  initEditCanvas();
+  // 현재 프로필 값 로드
+  var nick=document.getElementById('profile-name').textContent.replace('@','');
+  var bio=document.getElementById('profile-bio').textContent;
+  document.getElementById('edit-nick').value=nick==='yourname'?'':nick;
+  document.getElementById('edit-bio').value=bio==='나를 한 문장으로 표현하면?'?'':bio;
+  // 현재 선택된 태그 동기화
+  var activeTags=selectedIdentityTags||[];
+  document.querySelectorAll('#edit-tag-grid .edit-tag').forEach(function(el){
+    el.classList.toggle('sel', activeTags.indexOf(el.textContent)!==-1);
+  });
+  // 현재 아바타 캔버스에 그리기
+  if(editCtx){
+    editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130);
+    var origCanvas=document.getElementById('draw-canvas');
+    if(origCanvas){ editCtx.drawImage(origCanvas,0,0,278,130); }
+    else if(selectedChar){
+      editCtx.font='78px serif'; editCtx.textAlign='center'; editCtx.textBaseline='middle';
+      editCtx.fillText(selectedChar,139,65); editCtx.textAlign='start'; editCtx.textBaseline='alphabetic';
+    }
+    updateEditPreview();
+  }
+  show('scr-editprofile','scr-profile');
+}
+
+function saveEditProfile(){
+  // 닉네임
+  var nick=document.getElementById('edit-nick').value.trim()||selectedNick;
+  selectedNick=nick;
+  // 한 줄 소개
+  var bio=document.getElementById('edit-bio').value.trim()||'나를 한 문장으로 표현하면?';
+  document.getElementById('profile-bio').textContent=bio;
+  // 태그
+  var selEls=document.querySelectorAll('#edit-tag-grid .edit-tag.sel');
+  selectedIdentityTags=[];
+  selEls.forEach(function(el){ selectedIdentityTags.push(el.textContent); });
+  // 캔버스 → 아바타 반영
+  if(editCtx){
+    var dataUrl=document.getElementById('edit-canvas').toDataURL('image/png');
+    function setAv(id){ var el=document.getElementById(id); el.innerHTML=''; el.style.fontSize='0'; var img=document.createElement('img'); img.src=dataUrl; img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;'; el.appendChild(img); }
+    setAv('home-avatar'); setAv('profile-avatar');
+    // 원본 캔버스에도 반영
+    var origCanvas=document.getElementById('draw-canvas');
+    if(origCanvas&&ctx){ ctx.drawImage(document.getElementById('edit-canvas'),0,0,278,160); }
+  }
+  updateProfiles();
+  show('scr-profile','scr-editprofile');
+}
+
+/* ── 내 정보 탭 전환 ── */
+function switchProfileTab(tab){
+  document.getElementById('ptab-profile').classList.toggle('active', tab==='profile');
+  document.getElementById('ptab-settings').classList.toggle('active', tab==='settings');
+  document.getElementById('pcontent-profile').style.display = tab==='profile' ? 'block' : 'none';
+  document.getElementById('pcontent-settings').style.display = tab==='settings' ? 'block' : 'none';
+}
+
+/* ── 설정 토글 ── */
+function toggleSetting(btn){ btn.classList.toggle('on'); }
+
+function toggleDark(btn){
+  btn.classList.toggle('on');
+  var darkOn = btn.classList.contains('on');
+  document.body.classList.toggle('dark', darkOn);
+
+  // 모든 흰 배경 요소 강제 적용
+  var darkBg = '#1C1C20', darkBg2 = '#252529', darkBorder = '#2E2E35';
+  var whiteSels = [
+    '.home-tabbar','.home-topbar','.topbar','.msg-topbar','.chat-topbar',
+    '.profile-tabs','.profile-content','.settings-body',
+    '.s-gate','.gate-bottom','.gate-top',
+    '.friends-strip','.dm-list','.explore-search',
+    '.chat-input-bar','.signup-body','.signup-footer',
+    '.canvas-tabs','.canvas-toolbar','.canvas-wrap',
+    '.edit-canvas-tabs','.edit-canvas-toolbar',
+    '.base-scroll','.sticker-scroll','.edit-base-scroll','.edit-sticker-scroll',
+    '.newpost-body','.post-tile','.post-tag-section',
+    '.post-media-zone','.post-media-btn',
+    '.edit-body','.edit-avatar-section','.edit-field-section',
+    '.edit-canvas-mini-wrap'
+  ];
+  whiteSels.forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(el){
+      el.style.background = darkOn ? darkBg : '';
+      el.style.borderColor = darkOn ? darkBorder : '';
+    });
+  });
+
+  // settings-row (카드)
+  document.querySelectorAll('.settings-row').forEach(function(el){
+    el.style.background = darkOn ? darkBg2 : '';
+    el.style.borderColor = darkOn ? darkBorder : '';
+  });
+  document.querySelectorAll('.settings-item').forEach(function(el){
+    el.style.borderColor = darkOn ? darkBorder : '';
+  });
+
+  // 텍스트 색상
+  document.querySelectorAll('.settings-row-label').forEach(function(el){
+    if(!el.classList.contains('settings-danger'))
+      el.style.color = darkOn ? '#C8C6D8' : '';
+  });
+  document.querySelectorAll('.settings-row-desc,.settings-section-label,.settings-row-value').forEach(function(el){
+    el.style.color = darkOn ? '#555' : '';
+  });
+  document.querySelectorAll('.settings-select').forEach(function(el){
+    el.style.background = darkOn ? '#2E2E35' : '';
+    el.style.color = darkOn ? '#C8C6D8' : '';
+  });
+
+  // 아이콘 배경
+  var iconColorMap = {purple: darkOn?'#2A2A4A':'', blue: darkOn?'#1A2A3A':'', green: darkOn?'#162A22':'', orange: darkOn?'#2A1E10':'', danger: darkOn?'#3A1515':''};
+  Object.keys(iconColorMap).forEach(function(cls){
+    document.querySelectorAll('.settings-item-icon.'+cls).forEach(function(el){
+      el.style.background = iconColorMap[cls];
+    });
+  });
+
+  // 버전 텍스트
+  document.querySelectorAll('.settings-body > div:last-child').forEach(function(el){
+    el.style.color = darkOn ? '#444' : '';
+  });
+
+  // 메세지 화면 텍스트
+  document.querySelectorAll('.msg-topbar-title').forEach(function(el){ el.style.color = darkOn?'#F0EFF8':''; });
+  document.querySelectorAll('.friends-strip-label,.dm-section-label,.friend-name').forEach(function(el){ el.style.color = darkOn?'#666':''; });
+  document.querySelectorAll('.dm-row').forEach(function(el){ el.style.background = darkOn?'#1C1C20':''; });
+  document.querySelectorAll('.dm-row-name').forEach(function(el){ el.style.color = darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.dm-row.unread .dm-row-name').forEach(function(el){ el.style.color = darkOn?'#F0EFF8':''; });
+  document.querySelectorAll('.dm-row-preview').forEach(function(el){ el.style.color = darkOn?'#555':''; });
+  document.querySelectorAll('.dm-row.unread .dm-row-preview').forEach(function(el){ el.style.color = darkOn?'#AFA9EC':''; });
+  document.querySelectorAll('.dm-row-time').forEach(function(el){ el.style.color = darkOn?'#555':''; });
+  document.querySelectorAll('.dm-row.unread .dm-row-time').forEach(function(el){ el.style.color = darkOn?'#7F77DD':''; });
+  document.querySelectorAll('.dm-divider').forEach(function(el){ el.style.background = darkOn?'#2E2E35':''; });
+  document.querySelectorAll('.tl-dot').forEach(function(el){ el.style.borderColor = darkOn?'#141418':'#F7F5EF'; el.style.borderRadius='50%'; });
+  document.querySelectorAll('.journey-scroll').forEach(function(el){ el.style.background = darkOn?'#141418':''; });
+  document.querySelectorAll('.dm-list,.friends-strip,.s-messages').forEach(function(el){ el.style.background = darkOn?'#1C1C20':''; });
+  document.querySelectorAll('.msg-topbar').forEach(function(el){ el.style.background=darkOn?'#1C1C20':''; el.style.borderColor=darkOn?'#2E2E35':''; });
+
+  // 채팅방
+  document.querySelectorAll('.chat-peer-name').forEach(function(el){ el.style.color = darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.bubble.them').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.chat-input').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#C8C6D8':''; });
+
+  // 둘러보기
+  document.querySelectorAll('.tile').forEach(function(el){ el.style.background=darkOn?'#1E1E24':''; });
+  document.querySelectorAll('.tile-username').forEach(function(el){ el.style.color=darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.tile-caption').forEach(function(el){ el.style.color=darkOn?'#888':''; });
+  document.querySelectorAll('.tile-post-tag').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#AFA9EC':''; });
+  document.querySelectorAll('.search-bar').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.explore-search').forEach(function(el){ el.style.borderColor=darkOn?'#2E2E35':''; });
+}
+
+
+
+/* ── 포스트 작성 ── */
+.fab{position:absolute;bottom:74px;right:16px;width:48px;height:48px;background:#7F77DD;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;border:none}
+.fab:active{transform:scale(.93)}
+.s-newpost{background:#f4f4f0}
+.newpost-body{flex:1;overflow-y:auto;padding:14px 16px 16px}
+.post-tile{background:#fff;border-radius:20px;border:.5px solid #e8e8e4;overflow:hidden;margin-bottom:12px}
+.post-text-area{width:100%;min-height:160px;padding:16px;font-size:14px;line-height:1.7;color:#2C2C2A;border:none;outline:none;resize:none;font-family:inherit;background:#fff}
+.post-char-count{font-size:11px;color:#B4B2A9;text-align:right;padding:0 14px 10px}
+.post-char-count.warn{color:#E24B4A}
+.post-media-zone{border-top:.5px solid #f0efe8;padding:10px 12px;display:flex;gap:8px;align-items:center}
+.post-media-btn{display:flex;align-items:center;gap:6px;padding:8px 12px;border-radius:12px;background:#f4f4f0;border:none;font-size:12px;color:#5F5E5A;cursor:pointer;font-family:inherit;transition:background .12s}
+.post-media-btn:active{background:#e8e8e4}
+.post-media-preview{display:flex;gap:6px;flex-wrap:wrap;padding:0 12px 10px}
+.post-media-thumb{width:56px;height:56px;border-radius:10px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;flex-shrink:0}
+.post-media-thumb .remove{position:absolute;top:-5px;right:-5px;width:16px;height:16px;border-radius:50%;background:#E24B4A;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;border:none}
+.post-tag-section{background:#fff;border-radius:16px;border:.5px solid #e8e8e4;padding:12px 14px;margin-bottom:12px}
+.post-tag-section-label{font-size:11px;font-weight:500;color:#888780;letter-spacing:.04em;text-transform:uppercase;margin-bottom:8px}
+.post-tag-input-row{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.post-tag-inp{flex:1;padding:8px 12px;border:.5px solid #d3d1c7;border-radius:20px;font-size:13px;outline:none;font-family:inherit;color:#2C2C2A}
+.post-tag-inp:focus{border-color:#7F77DD}
+.post-tag-add{width:30px;height:30px;background:#7F77DD;border:none;border-radius:50%;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
+.post-tags-row{display:flex;flex-wrap:wrap;gap:5px}
+.post-tag-chip{font-size:11px;padding:4px 10px;border-radius:12px;background:#EEEDFE;color:#534AB7;display:flex;align-items:center;gap:4px}
+.post-tag-chip button{background:none;border:none;color:#888780;cursor:pointer;font-size:12px;padding:0;line-height:1}
+.post-submit-btn{width:100%;padding:14px;background:#7F77DD;color:#EEEDFE;border:none;border-radius:14px;font-size:15px;font-weight:500;cursor:pointer;font-family:inherit}
+.post-submit-btn:active{opacity:.8}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="phone">
+
+    <!-- ① 스플래시 -->
+    <div class="screen s-splash" id="scr-splash">
+      <div class="splash-icon"><svg class="icon" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#EEEDFE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+      <div class="splash-name">앱 이름 미정</div>
+      <div class="splash-sub">나를 표현하는 나만의 캔버스</div>
+      <div class="splash-bar-wrap"><div class="splash-bar" id="splash-bar"></div></div>
+    </div>
+
+    <!-- ② 시작 -->
+    <div class="screen s-gate hidden" id="scr-gate">
+      <div class="gate-top">
+        <div class="gate-icon"><svg class="icon" width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#EEEDFE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+        <div class="gate-name">앱 이름 미정</div>
+        <div class="gate-tagline">나를 표현하는 나만의 캔버스</div>
+      </div>
+      <div class="gate-bottom">
+        <button class="btn-primary" onclick="goSignup()">시작하기 — 캐릭터 만들기</button>
+        <div class="divider-row"><div class="div-line"></div><div class="div-text">이미 계정이 있어요</div><div class="div-line"></div></div>
+        <button class="btn-secondary" onclick="goHome()">자동 로그인으로 시작</button>
+      </div>
+    </div>
+
+    <!-- ③ 회원가입 -->
+    <div class="screen s-signup hidden" id="scr-signup">
+      <div class="topbar">
+        <button class="topbar-back" onclick="show('scr-gate','scr-signup')" aria-label="뒤로"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="topbar-title" id="signup-topbar-title">계정 만들기</div>
+      </div>
+      <div class="signup-body">
+        <div class="step-indicator">
+          <div class="step-pip done" id="pip0"></div>
+          <div class="step-pip" id="pip1"></div>
+          <div class="step-pip" id="pip2"></div>
+        </div>
+
+        <!-- step0 -->
+        <div id="step0">
+          <div class="field-label">닉네임</div>
+          <input class="field-input" type="text" placeholder="나를 부를 이름" id="inp-nick">
+          <div class="field-label">이메일</div>
+          <input class="field-input" type="email" placeholder="email@example.com">
+          <div class="field-label">비밀번호</div>
+          <input class="field-input" type="password" placeholder="8자 이상">
+        </div>
+
+        <!-- step1: 캔버스 에디터 -->
+        <div id="step1" style="display:none">
+          <div class="section-title">나만의 캐릭터를 만들어요</div>
+          <div class="canvas-wrap">
+            <div class="canvas-tabs">
+              <div class="canvas-tab active" onclick="switchCanvasTab('draw',this)">✏️ 그리기</div>
+              <div class="canvas-tab" onclick="switchCanvasTab('base',this)">🐾 베이스</div>
+              <div class="canvas-tab" onclick="switchCanvasTab('sticker',this)">✨ 스티커</div>
+            </div>
+            <div id="canvas-draw">
+              <div class="canvas-stage"><canvas id="draw-canvas" width="278" height="160"></canvas></div>
+              <div class="canvas-toolbar">
+                <div class="tool-btn active" id="tool-brush" onclick="setTool('brush')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+                <div class="tool-btn" id="tool-eraser" onclick="setTool('eraser')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/></svg></div>
+                <div class="tool-btn" id="tool-circle" onclick="setTool('circle')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+                <div class="tool-btn" id="tool-rect" onclick="setTool('rect')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                <div class="tool-btn" onclick="clearCanvas()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+                <div style="display:flex;gap:4px;margin-left:auto">
+                  <div class="color-dot active" style="background:#2C2C2A" onclick="setColor('#2C2C2A',this)"></div>
+                  <div class="color-dot" style="background:#7F77DD" onclick="setColor('#7F77DD',this)"></div>
+                  <div class="color-dot" style="background:#D4537E" onclick="setColor('#D4537E',this)"></div>
+                  <div class="color-dot" style="background:#1D9E75" onclick="setColor('#1D9E75',this)"></div>
+                  <div class="color-dot" style="background:#EF9F27" onclick="setColor('#EF9F27',this)"></div>
+                  <div class="color-dot" style="background:#fff;border:.5px solid #d3d1c7" onclick="setColor('#fff',this)"></div>
+                </div>
+              </div>
+            </div>
+            <div id="canvas-base" style="display:none">
+              <div class="base-scroll">
+                <div class="base-cat-label">동물형</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickBlank(this)" id="base-blank" style="font-size:13px;color:#888780;flex-direction:column;gap:2px;font-family:inherit">
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/></svg>
+                    <span style="font-size:9px;color:#B4B2A9">비어있음</span>
+                  </div>
+                  <div class="base-char-opt sel" onclick="pickBase(this,'🦊')" id="base-fox">🦊</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🐻')">🐻</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🐱')">🐱</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🐸')">🐸</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🐺')">🐺</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🦁')">🦁</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🐼')">🐼</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🐰')">🐰</div>
+                </div>
+                <div class="base-cat-label">인간형</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickBase(this,'🧑')">🧑</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'👦')">👦</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'👧')">👧</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🧒')">🧒</div>
+                </div>
+                <div class="base-cat-label">판타지형</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickBase(this,'🧙')">🧙</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🧚')">🧚</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🤖')">🤖</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'👾')">👾</div>
+                </div>
+                <div class="base-cat-label">오브젝트형</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickBase(this,'⭐')">⭐</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🌙')">🌙</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🌿')">🌿</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'☁️')">☁️</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🌈')">🌈</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🔮')">🔮</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'🍄')">🍄</div>
+                  <div class="base-char-opt" onclick="pickBase(this,'💎')">💎</div>
+                </div>
+              </div>
+            </div>
+            <div id="canvas-sticker" style="display:none">
+              <div class="sticker-scroll">
+                <div class="base-cat-label">감정</div>
+                <div class="sticker-grid">
+                  <div class="sticker-opt" onclick="addSticker('❤️')">❤️</div>
+                  <div class="sticker-opt" onclick="addSticker('✨')">✨</div>
+                  <div class="sticker-opt" onclick="addSticker('🔥')">🔥</div>
+                  <div class="sticker-opt" onclick="addSticker('💫')">💫</div>
+                  <div class="sticker-opt" onclick="addSticker('🌟')">🌟</div>
+                </div>
+                <div class="base-cat-label">날씨·자연</div>
+                <div class="sticker-grid">
+                  <div class="sticker-opt" onclick="addSticker('☀️')">☀️</div>
+                  <div class="sticker-opt" onclick="addSticker('🌧️')">🌧️</div>
+                  <div class="sticker-opt" onclick="addSticker('❄️')">❄️</div>
+                  <div class="sticker-opt" onclick="addSticker('🌸')">🌸</div>
+                  <div class="sticker-opt" onclick="addSticker('🍃')">🍃</div>
+                </div>
+                <div class="base-cat-label">아이템</div>
+                <div class="sticker-grid">
+                  <div class="sticker-opt" onclick="addSticker('🎨')">🎨</div>
+                  <div class="sticker-opt" onclick="addSticker('🎵')">🎵</div>
+                  <div class="sticker-opt" onclick="addSticker('📷')">📷</div>
+                  <div class="sticker-opt" onclick="addSticker('💻')">💻</div>
+                  <div class="sticker-opt" onclick="addSticker('🎮')">🎮</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-row">
+            <div class="canvas-preview" id="canvas-preview-box">🦊</div>
+            <div style="font-size:12px;color:#888780;line-height:1.6">베이스 캐릭터를 고르고<br>캔버스에 자유롭게 그려보세요</div>
+          </div>
+        </div>
+
+        <!-- step2: 아이덴티티 태그 -->
+        <div id="step2" style="display:none">
+          <div class="section-title">나를 표현하는 단어들</div>
+          <div style="font-size:11px;color:#888780;margin-bottom:12px">선택한 태그는 내 프로필에서만 보여요</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px" id="val-tags">
+            <div class="tag sel" onclick="toggleTag(this)">자유로운</div>
+            <div class="tag" onclick="toggleTag(this)">창의적</div>
+            <div class="tag sel" onclick="toggleTag(this)">야행성</div>
+            <div class="tag" onclick="toggleTag(this)">내향적</div>
+            <div class="tag" onclick="toggleTag(this)">외향적</div>
+            <div class="tag" onclick="toggleTag(this)">도전적</div>
+            <div class="tag" onclick="toggleTag(this)">감성적</div>
+            <div class="tag" onclick="toggleTag(this)">논리적</div>
+            <div class="tag" onclick="toggleTag(this)">따뜻한</div>
+            <div class="tag" onclick="toggleTag(this)">사려깊은</div>
+            <div class="tag" onclick="toggleTag(this)">유머러스</div>
+            <div class="tag" onclick="toggleTag(this)">조용한</div>
+            <div class="tag" onclick="toggleTag(this)">활발한</div>
+            <div class="tag" onclick="toggleTag(this)">독립적</div>
+            <div class="tag" onclick="toggleTag(this)">공감능력</div>
+            <div class="tag" onclick="toggleTag(this)">호기심</div>
+            <div class="tag" onclick="toggleTag(this)">완벽주의</div>
+            <div class="tag" onclick="toggleTag(this)">즉흥적</div>
+            <div class="tag" onclick="toggleTag(this)">계획적</div>
+            <div class="tag" onclick="toggleTag(this)">긍정적</div>
+            <div class="tag" onclick="toggleTag(this)">현실적</div>
+            <div class="tag" onclick="toggleTag(this)">몽상가</div>
+            <div class="tag" onclick="toggleTag(this)">아침형</div>
+            <div class="tag" onclick="toggleTag(this)">미식가</div>
+            <div class="tag" onclick="toggleTag(this)">독서가</div>
+            <div class="tag" onclick="toggleTag(this)">운동파</div>
+            <div class="tag" onclick="toggleTag(this)">집순이·집돌이</div>
+          </div>
+          <div class="field-label">한 줄 소개</div>
+          <input class="field-input" type="text" placeholder="나를 한 문장으로 표현하면?" id="inp-bio">
+        </div>
+      </div>
+      <div class="signup-footer">
+        <button class="btn-primary" id="signup-next-btn" onclick="signupNext()">다음</button>
+      </div>
+    </div>
+
+    <!-- ④ 홈 -->
+    <div class="screen s-home hidden" id="scr-home">
+      <!-- 히어로 영역 -->
+      <div class="journey-hero">
+        <div class="journey-hero-topbar">
+          <div class="journey-title">My Journey</div>
+          <button class="journey-hero-edit" onclick="openEditProfile()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            편집
+          </button>
+        </div>
+        <div class="journey-hero-avatar" id="home-avatar" onclick="switchTab('myinfo')">🦊</div>
+        <div class="journey-hero-name" id="home-name">@yourname</div>
+        <div class="journey-hero-tags" id="home-hero-tags">
+          <div class="journey-hero-tag">자유로운</div>
+          <div class="journey-hero-tag">야행성</div>
+        </div>
+      </div>
+
+      <!-- 타임라인 -->
+      <div class="home-body">
+        <div class="journey-scroll">
+          <div class="timeline" id="journey-timeline">
+
+            <div class="tl-item" onclick="toggleTl(this)">
+              <div class="tl-dot char"></div>
+              <div class="tl-row char-row">
+                <div class="tl-row-icon char">🦊</div>
+                <div class="tl-row-text">
+                  <div class="tl-row-title">캐릭터 변경</div>
+                  <div class="tl-row-date">오늘</div>
+                </div>
+                <svg class="tl-row-chevron icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="tl-detail">
+                <div class="tl-detail-inner char">
+                  <div class="tl-char-body">
+                    <div class="tl-char-thumb">🐱</div>
+                    <div class="tl-char-arrow">→</div>
+                    <div class="tl-char-thumb" id="journey-current-char">🦊</div>
+                    <div class="tl-char-desc">나를 더 잘 표현하는 캐릭터로 바꿨어요</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tl-item" onclick="toggleTl(this)">
+              <div class="tl-dot post"></div>
+              <div class="tl-row post-row">
+                <div class="tl-row-icon post">✏️</div>
+                <div class="tl-row-text">
+                  <div class="tl-row-title">오늘의 나는 조금 더 자유로운 기분 ☀️</div>
+                  <div class="tl-row-date">오늘</div>
+                </div>
+                <svg class="tl-row-chevron icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="tl-detail">
+                <div class="tl-detail-inner post">
+                  <div class="tl-post-text">오늘의 나는 조금 더 자유로운 기분 ☀️</div>
+                  <div class="tl-post-tags">
+                    <div class="tl-post-tag">#오늘일상</div>
+                    <div class="tl-post-tag">#캔버스아트</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tl-item" onclick="toggleTl(this)">
+              <div class="tl-dot tag"></div>
+              <div class="tl-row tag-row">
+                <div class="tl-row-icon tag">🏷️</div>
+                <div class="tl-row-text">
+                  <div class="tl-row-title">태그 업데이트 — 창의적, 도전적 추가</div>
+                  <div class="tl-row-date">3일 전</div>
+                </div>
+                <svg class="tl-row-chevron icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="tl-detail">
+                <div class="tl-detail-inner tag">
+                  <div class="tl-tag-chips">
+                    <div class="tl-tag-chip">자유로운</div>
+                    <div class="tl-tag-chip">야행성</div>
+                    <div class="tl-tag-chip new">+ 창의적</div>
+                    <div class="tl-tag-chip new">+ 도전적</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tl-item" onclick="toggleTl(this)">
+              <div class="tl-dot post"></div>
+              <div class="tl-row post-row">
+                <div class="tl-row-icon post">✏️</div>
+                <div class="tl-row-text">
+                  <div class="tl-row-title">달빛 아래서 생각이 많아지는 밤 🌙</div>
+                  <div class="tl-row-date">5일 전</div>
+                </div>
+                <svg class="tl-row-chevron icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="tl-detail">
+                <div class="tl-detail-inner post">
+                  <div class="tl-post-text">달빛 아래서 생각이 많아지는 밤 🌙</div>
+                  <div class="tl-post-img">🌙</div>
+                  <div class="tl-post-tags">
+                    <div class="tl-post-tag">#새벽감성</div>
+                    <div class="tl-post-tag">#달빛</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="tl-item" onclick="toggleTl(this)">
+              <div class="tl-dot char"></div>
+              <div class="tl-row char-row">
+                <div class="tl-row-icon char">🐱</div>
+                <div class="tl-row-text">
+                  <div class="tl-row-title">첫 번째 캐릭터 등록 🎉</div>
+                  <div class="tl-row-date">2주 전</div>
+                </div>
+                <svg class="tl-row-chevron icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </div>
+              <div class="tl-detail">
+                <div class="tl-detail-inner char">
+                  <div class="tl-char-body">
+                    <div class="tl-char-thumb">🐱</div>
+                    <div class="tl-char-desc">이 앱에서의 첫 캐릭터를 만들었어요 🎉</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+      <div class="home-tabbar">
+        <div class="tab-item active" onclick="switchTab('home')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</div>
+        <div class="tab-item" onclick="switchTab('explore')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>둘러보기</div>
+        <div class="tab-identity-btn" onclick="openIdentitySheet()" id="tab-identity-btn"><div class="tab-identity-avatar" id="tab-identity-avatar">🦊</div><div class="tab-identity-dot hidden" id="tab-identity-notif"></div></div>
+        <div class="tab-item" onclick="switchTab('messages')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>메세지</div>
+        <div class="tab-item" onclick="switchTab('myinfo')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>내 정보</div>
+      </div>
+    </div>
+
+    <!-- ⑤ 둘러보기 -->
+    <div class="screen s-explore hidden" id="scr-explore">
+      <div class="home-topbar"><div class="home-logo">둘러보기</div><div class="home-icons"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div></div>
+      <div class="explore-search"><input class="search-bar" type="text" placeholder="캐릭터, #태그, 유저 검색"></div>
+      <div style="flex:1;position:relative;overflow:hidden;display:flex;flex-direction:column">
+        <div class="explore-scroll"><div class="masonry" id="masonry-grid"></div></div>
+        <button class="fab" onclick="openNewPost()" aria-label="새 포스트">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        </button>
+      </div>
+      <div class="home-tabbar">
+        <div class="tab-item" onclick="switchTab('home')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</div>
+        <div class="tab-item active" onclick="switchTab('explore')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>둘러보기</div>
+        <div class="tab-identity-btn" onclick="openIdentitySheet()" id="tab-identity-btn"><div class="tab-identity-avatar" id="tab-identity-avatar">🦊</div><div class="tab-identity-dot hidden" id="tab-identity-notif"></div></div>
+        <div class="tab-item" onclick="switchTab('messages')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>메세지</div>
+        <div class="tab-item" onclick="switchTab('myinfo')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>내 정보</div>
+      </div>
+    </div>
+
+    <!-- ⑥ 메세지 -->
+    <div class="screen s-messages hidden" id="scr-messages">
+      <div class="msg-topbar">
+        <div class="msg-topbar-title">메세지</div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <!-- 그룹 채팅 테스트 버튼 -->
+          <div onclick="tryJoinGroupChat('group_001')" style="cursor:pointer" title="그룹 채팅 입장 테스트">
+            <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888780" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <!-- 친구 추가 테스트 버튼 -->
+          <div onclick="tryAddFriend('acc_001','bearhug')" style="cursor:pointer" title="친구 요청 테스트">
+            <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#888780" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="friends-strip"><div class="friends-strip-label">친구 업데이트</div><div class="friends-scroll" id="friends-strip-list"></div></div>
+      <div class="dm-list"><div class="dm-section-label">대화</div><div class="dm-list-inner" id="dm-grid"></div></div>
+      <div class="home-tabbar">
+        <div class="tab-item" onclick="switchTab('home')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</div>
+        <div class="tab-item" onclick="switchTab('explore')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>둘러보기</div>
+        <div class="tab-identity-btn" onclick="openIdentitySheet()" id="tab-identity-btn"><div class="tab-identity-avatar" id="tab-identity-avatar">🦊</div><div class="tab-identity-dot hidden" id="tab-identity-notif"></div></div>
+        <div class="tab-item active" onclick="switchTab('messages')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>메세지</div>
+        <div class="tab-item" onclick="switchTab('myinfo')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>내 정보</div>
+      </div>
+    </div>
+
+    <!-- ⑦ 채팅방 -->
+    <div class="screen s-chatroom hidden" id="scr-chatroom">
+      <div class="chat-topbar">
+        <button class="chat-back" onclick="show('scr-messages','scr-chatroom')" aria-label="뒤로"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg></button>
+        <div class="chat-avatar-sm" id="chat-avatar-top" style="background:#EEEDFE">🦊</div>
+        <div class="chat-peer-name" id="chat-peer-name">@foxday</div>
+        <svg class="icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888780" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </div>
+      <div class="chat-block-banner hidden" id="chat-block-banner">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#993C1D" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <div class="chat-block-banner-text" id="chat-block-banner-text"></div>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-input-bar">
+        <input class="chat-input" type="text" placeholder="메세지 입력..." id="chat-input-field" onkeydown="if(event.key==='Enter')sendMsg()">
+        <button class="chat-send" onclick="sendMsg()" aria-label="전송"><svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+
+    <!-- ⑨ 포스트 작성 -->
+    <div class="screen s-newpost hidden" id="scr-newpost">
+      <div class="topbar">
+        <button class="topbar-back" onclick="show('scr-explore','scr-newpost')" aria-label="취소">
+          <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">새 포스트</div>
+        <div style="width:22px"></div>
+      </div>
+      <div class="newpost-body">
+
+        <!-- 어떤 아이덴티티로 올릴지 -->
+        <div class="post-identity-select" onclick="openIdentitySheet()">
+          <div class="post-identity-avatar-sm" id="post-id-avatar">🦊</div>
+          <div class="post-identity-name" id="post-id-name">@yourname 으로 올리기</div>
+          <div class="post-identity-change">변경 ›</div>
+        </div>
+
+        <!-- 타일 작성 영역 -->
+        <div class="post-tile">
+          <textarea
+            class="post-text-area"
+            id="post-text"
+            placeholder="지금 어떤 생각을 하고 있나요? (최대 200자)"
+            maxlength="200"
+            oninput="updateCharCount(this)"></textarea>
+          <div class="post-char-count" id="post-char-count">0 / 200</div>
+
+          <!-- 미디어 미리보기 -->
+          <div class="post-media-preview" id="post-media-preview"></div>
+
+          <!-- 미디어 추가 버튼 -->
+          <div class="post-media-zone">
+            <button class="post-media-btn" onclick="addMedia('photo')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+              사진 추가
+            </button>
+            <button class="post-media-btn" onclick="addMedia('video')">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+              동영상 추가
+            </button>
+          </div>
+        </div>
+
+        <!-- 해시태그 -->
+        <div class="post-tag-section">
+          <div class="post-tag-section-label">해시태그</div>
+          <div class="post-tag-input-row">
+            <input class="post-tag-inp" type="text" placeholder="#태그 입력" id="post-tag-inp" onkeydown="if(event.key==='Enter'){addPostTag();event.preventDefault();}">
+            <button class="post-tag-add" onclick="addPostTag()">+</button>
+          </div>
+          <div class="post-tags-row" id="post-tags-row"></div>
+        </div>
+
+        <button class="post-submit-btn" onclick="submitPost()">포스트 올리기</button>
+      </div>
+    </div>
+
+    <!-- ⑧ 내 정보 -->
+    <div class="screen s-profile hidden" id="scr-profile">
+      <div class="home-topbar">
+        <div class="home-logo">내 정보</div>
+        <button class="profile-edit-btn" onclick="openEditProfile()">
+          <svg class="icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          편집
+        </button>
+      </div>
+
+      <!-- 프로필 / 설정 탭 -->
+      <div class="profile-tabs">
+        <div class="profile-tab active" id="ptab-profile" onclick="switchProfileTab('profile')">프로필</div>
+        <div class="profile-tab" id="ptab-settings" onclick="switchProfileTab('settings')">설정</div>
+      </div>
+
+      <!-- 프로필 콘텐츠 -->
+      <div class="profile-content" id="pcontent-profile">
+        <div class="profile-hero"><div class="profile-avatar-big" id="profile-avatar">🦊</div></div>
+        <div class="profile-body">
+          <div class="profile-name" id="profile-name">@yourname</div>
+          <div class="profile-bio-text" id="profile-bio">나를 한 문장으로 표현하면?</div>
+          <div class="identity-tag-section">
+            <div class="identity-tag-label">나를 표현하는 태그</div>
+            <div class="identity-tags" id="profile-identity-tags">
+              <div class="identity-tag">자유로운</div>
+              <div class="identity-tag">야행성</div>
+            </div>
+          </div>
+          <div class="profile-section-title">친구</div>
+          <div style="display:flex;gap:10px">
+            <div class="friend-stat-box"><div class="friend-stat-val" id="friend-count">6</div><div class="friend-stat-lbl">친구</div></div>
+            <div class="friend-stat-box"><div class="friend-stat-val">3</div><div class="friend-stat-lbl">대화 중</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 설정 콘텐츠 -->
+      <div class="profile-content" id="pcontent-settings" style="display:none">
+        <div class="settings-body">
+
+          <!-- 화면 -->
+          <div class="settings-section-label">화면</div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <div class="settings-item-icon purple">🌙</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">다크 모드</div>
+                <div class="settings-row-desc">어두운 테마로 전환해요</div>
+              </div>
+              <button class="toggle" id="dark-toggle" onclick="toggleDark(this)"></button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-icon blue">🌐</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">언어</div>
+              </div>
+              <div class="settings-row-right">
+                <select class="settings-select" onchange="changeLang(this.value)">
+                  <option value="ko">한국어</option>
+                  <option value="en">English</option>
+                  <option value="ja">日本語</option>
+                  <option value="zh">中文</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- 알림 -->
+          <div class="settings-section-label">알림</div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <div class="settings-item-icon orange">🔔</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">푸시 알림</div>
+                <div class="settings-row-desc">새 메세지, 친구 요청 알림</div>
+              </div>
+              <button class="toggle on" onclick="toggleSetting(this)"></button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-icon orange">💬</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">메세지 알림</div>
+              </div>
+              <button class="toggle on" onclick="toggleSetting(this)"></button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-icon orange">👥</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">친구 요청 알림</div>
+              </div>
+              <button class="toggle on" onclick="toggleSetting(this)"></button>
+            </div>
+          </div>
+
+          <!-- 공개 설정 -->
+          <div class="settings-section-label">공개 설정</div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <div class="settings-item-icon green">🔒</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">프로필 공개</div>
+                <div class="settings-row-desc">누구나 내 프로필을 볼 수 있어요</div>
+              </div>
+              <button class="toggle on" onclick="toggleSetting(this)"></button>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-icon green">🎨</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">포스트 공개</div>
+                <div class="settings-row-desc">둘러보기에 내 포스트 노출</div>
+              </div>
+              <button class="toggle on" onclick="toggleSetting(this)"></button>
+            </div>
+          </div>
+
+          <!-- 계정 관리 -->
+          <div class="settings-section-label">계정 관리</div>
+          <div class="settings-row">
+            <div class="settings-item">
+              <div class="settings-item-icon blue">📧</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">이메일 변경</div>
+                <div class="settings-row-desc" id="settings-email">user@example.com</div>
+              </div>
+              <div class="settings-row-right">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-icon blue">🔑</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">비밀번호 변경</div>
+              </div>
+              <div class="settings-row-right">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            <div class="settings-item">
+              <div class="settings-item-icon purple">📦</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">데이터 내보내기</div>
+                <div class="settings-row-desc">내 기록을 파일로 저장해요</div>
+              </div>
+              <div class="settings-row-right">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- 위험 구역 -->
+          <div class="settings-section-label">계정</div>
+          <div class="settings-row">
+            <div class="settings-item" onclick="alert('로그아웃 되었습니다')">
+              <div class="settings-item-icon orange">🚪</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label">로그아웃</div>
+              </div>
+              <div class="settings-row-right">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+            <div class="settings-item" onclick="alert('계정 삭제는 실제 서비스에서 가능해요')">
+              <div class="settings-item-icon danger">⚠️</div>
+              <div class="settings-item-body">
+                <div class="settings-row-label settings-danger">계정 삭제</div>
+                <div class="settings-row-desc">모든 데이터가 영구 삭제돼요</div>
+              </div>
+              <div class="settings-row-right">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#E24B4A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <div style="text-align:center;padding:12px 0 4px;font-size:11px;color:#B4B2A9">버전 0.1.0 (프로토타입)</div>
+        </div>
+      </div>
+
+      <div class="home-tabbar">
+        <div class="tab-item" onclick="switchTab('home')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>홈</div>
+        <div class="tab-item" onclick="switchTab('explore')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>둘러보기</div>
+        <div class="tab-identity-btn" onclick="openIdentitySheet()" id="tab-identity-btn"><div class="tab-identity-avatar" id="tab-identity-avatar">🦊</div><div class="tab-identity-dot hidden" id="tab-identity-notif"></div></div>
+        <div class="tab-item" onclick="switchTab('messages')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>메세지</div>
+        <div class="tab-item active" onclick="switchTab('myinfo')"><svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>내 정보</div>
+      </div>
+    </div>
+
+    <!-- ⑩ 프로필 편집 -->
+    <div class="screen s-editprofile hidden" id="scr-editprofile">
+      <div class="topbar">
+        <button class="topbar-back" onclick="show('scr-profile','scr-editprofile')" aria-label="취소">
+          <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title">프로필 편집</div>
+        <button onclick="saveEditProfile()" style="background:none;border:none;font-size:14px;font-weight:500;color:#7F77DD;cursor:pointer;font-family:inherit">저장</button>
+      </div>
+      <div class="edit-body">
+
+        <!-- 아이콘 편집 -->
+        <div class="edit-avatar-section">
+          <div class="edit-avatar-preview" id="edit-avatar-preview">🦊</div>
+          <div class="edit-avatar-hint">아이콘을 탭해서 변경하거나 아래서 직접 편집하세요</div>
+          <div class="edit-canvas-mini-wrap">
+            <div class="edit-canvas-tabs">
+              <div class="edit-canvas-tab active" onclick="switchEditTab('draw',this)">✏️ 그리기</div>
+              <div class="edit-canvas-tab" onclick="switchEditTab('base',this)">🐾 베이스</div>
+              <div class="edit-canvas-tab" onclick="switchEditTab('sticker',this)">✨ 스티커</div>
+            </div>
+            <div id="edit-canvas-draw">
+              <div style="display:flex;align-items:center;justify-content:center;background:#fff">
+                <canvas id="edit-canvas" width="278" height="130" style="cursor:crosshair;touch-action:none;display:block"></canvas>
+              </div>
+              <div class="edit-canvas-toolbar">
+                <div class="tool-btn active" id="etool-brush" onclick="setEditTool('brush')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+                <div class="tool-btn" id="etool-eraser" onclick="setEditTool('eraser')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/></svg></div>
+                <div class="tool-btn" id="etool-circle" onclick="setEditTool('circle')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+                <div class="tool-btn" id="etool-rect" onclick="setEditTool('rect')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                <div class="tool-btn" onclick="clearEditCanvas()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+                <div style="display:flex;gap:3px;margin-left:auto">
+                  <div class="color-dot active" style="width:18px;height:18px;background:#2C2C2A" onclick="setEditColor('#2C2C2A',this)"></div>
+                  <div class="color-dot" style="width:18px;height:18px;background:#7F77DD" onclick="setEditColor('#7F77DD',this)"></div>
+                  <div class="color-dot" style="width:18px;height:18px;background:#D4537E" onclick="setEditColor('#D4537E',this)"></div>
+                  <div class="color-dot" style="width:18px;height:18px;background:#1D9E75" onclick="setEditColor('#1D9E75',this)"></div>
+                  <div class="color-dot" style="width:18px;height:18px;background:#EF9F27" onclick="setEditColor('#EF9F27',this)"></div>
+                  <div class="color-dot" style="width:18px;height:18px;background:#fff;border:.5px solid #d3d1c7" onclick="setEditColor('#fff',this)"></div>
+                </div>
+              </div>
+            </div>
+            <div id="edit-canvas-base" style="display:none">
+              <div class="edit-base-scroll">
+                <div class="base-cat-label">동물형</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickEditBase(this,'')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+                  <div class="base-char-opt sel" onclick="pickEditBase(this,'🦊')">🦊</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🐻')">🐻</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🐱')">🐱</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🐸')">🐸</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🐺')">🐺</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🦁')">🦁</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🐼')">🐼</div>
+                </div>
+                <div class="base-cat-label">판타지·오브젝트</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🧙')">🧙</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🧚')">🧚</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🤖')">🤖</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'👾')">👾</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'⭐')">⭐</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🌙')">🌙</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'🔮')">🔮</div>
+                  <div class="base-char-opt" onclick="pickEditBase(this,'💎')">💎</div>
+                </div>
+              </div>
+            </div>
+            <div id="edit-canvas-sticker" style="display:none">
+              <div class="edit-sticker-scroll">
+                <div class="sticker-grid">
+                  <div class="sticker-opt" onclick="addEditSticker('❤️')">❤️</div>
+                  <div class="sticker-opt" onclick="addEditSticker('✨')">✨</div>
+                  <div class="sticker-opt" onclick="addEditSticker('🔥')">🔥</div>
+                  <div class="sticker-opt" onclick="addEditSticker('💫')">💫</div>
+                  <div class="sticker-opt" onclick="addEditSticker('🌟')">🌟</div>
+                  <div class="sticker-opt" onclick="addEditSticker('☀️')">☀️</div>
+                  <div class="sticker-opt" onclick="addEditSticker('🌸')">🌸</div>
+                  <div class="sticker-opt" onclick="addEditSticker('🎨')">🎨</div>
+                  <div class="sticker-opt" onclick="addEditSticker('🎵')">🎵</div>
+                  <div class="sticker-opt" onclick="addEditSticker('🎮')">🎮</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 닉네임 -->
+        <div class="edit-field-section">
+          <div class="edit-field-label">닉네임</div>
+          <input class="edit-input" type="text" id="edit-nick" placeholder="나를 부를 이름">
+        </div>
+
+        <!-- 한 줄 소개 -->
+        <div class="edit-field-section">
+          <div class="edit-field-label">한 줄 소개</div>
+          <input class="edit-input" type="text" id="edit-bio" placeholder="나를 한 문장으로 표현하면?">
+        </div>
+
+        <!-- 아이덴티티 태그 -->
+        <div class="edit-field-section">
+          <div class="edit-field-label">나를 표현하는 태그</div>
+          <div style="font-size:11px;color:#888780;margin-bottom:10px">내 프로필에서만 보여요 · 여러 개 선택 가능</div>
+          <div class="edit-tag-grid" id="edit-tag-grid">
+                  <div class="edit-tag sel" onclick="toggleEditTag(this)">자유로운</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">창의적</div>
+                  <div class="edit-tag sel" onclick="toggleEditTag(this)">야행성</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">내향적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">외향적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">도전적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">감성적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">논리적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">따뜻한</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">사려깊은</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">유머러스</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">조용한</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">활발한</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">독립적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">공감능력</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">호기심</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">완벽주의</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">즉흥적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">계획적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">긍정적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">현실적</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">몽상가</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">아침형</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">미식가</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">독서가</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">운동파</div>
+                  <div class="edit-tag" onclick="toggleEditTag(this)">집순이·집돌이</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- 아이덴티티 추가 전용 화면 -->
+    <div class="screen s-addidentity hidden" id="scr-addidentity">
+      <div class="topbar">
+        <button class="topbar-back" onclick="cancelAddIdentity()" aria-label="취소">
+          <svg class="icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <div class="topbar-title" id="add-id-topbar-title">새 아이덴티티</div>
+        <div style="width:22px"></div>
+      </div>
+      <div class="signup-body" id="add-id-body">
+        <div class="step-indicator">
+          <div class="step-pip done" id="add-pip0"></div>
+          <div class="step-pip" id="add-pip1"></div>
+          <div class="step-pip" id="add-pip2"></div>
+        </div>
+
+        <!-- step 0: 닉네임 -->
+        <div id="add-step0">
+          <div class="field-label">닉네임</div>
+          <input class="field-input" type="text" placeholder="이 아이덴티티의 이름" id="add-inp-nick">
+          <div style="font-size:12px;color:#888780;margin-top:-8px;margin-bottom:14px">현재 계정과 다른 나를 표현하는 이름을 지어보세요</div>
+        </div>
+
+        <!-- step 1: 캔버스 -->
+        <div id="add-step1" style="display:none">
+          <div class="section-title">이 아이덴티티의 캐릭터를 만들어요</div>
+          <div class="canvas-wrap">
+            <div class="canvas-tabs">
+              <div class="canvas-tab active" onclick="switchAddCanvasTab('draw',this)">✏️ 그리기</div>
+              <div class="canvas-tab" onclick="switchAddCanvasTab('base',this)">🐾 베이스</div>
+              <div class="canvas-tab" onclick="switchAddCanvasTab('sticker',this)">✨ 스티커</div>
+            </div>
+            <div id="add-canvas-draw">
+              <div style="display:flex;align-items:center;justify-content:center;background:#fff">
+                <canvas id="add-draw-canvas" width="278" height="160" style="cursor:crosshair;touch-action:none;display:block"></canvas>
+              </div>
+              <div class="canvas-toolbar">
+                <div class="tool-btn active" id="addtool-brush" onclick="setAddTool('brush')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>
+                <div class="tool-btn" id="addtool-eraser" onclick="setAddTool('eraser')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H7L3 16l10-10 7 7-3.5 3.5"/></svg></div>
+                <div class="tool-btn" id="addtool-circle" onclick="setAddTool('circle')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg></div>
+                <div class="tool-btn" id="addtool-rect" onclick="setAddTool('rect')"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg></div>
+                <div class="tool-btn" onclick="clearAddCanvas()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></div>
+                <div style="display:flex;gap:4px;margin-left:auto">
+                  <div class="color-dot active" style="background:#2C2C2A" onclick="setAddColor('#2C2C2A',this)"></div>
+                  <div class="color-dot" style="background:#7F77DD" onclick="setAddColor('#7F77DD',this)"></div>
+                  <div class="color-dot" style="background:#D4537E" onclick="setAddColor('#D4537E',this)"></div>
+                  <div class="color-dot" style="background:#1D9E75" onclick="setAddColor('#1D9E75',this)"></div>
+                  <div class="color-dot" style="background:#EF9F27" onclick="setAddColor('#EF9F27',this)"></div>
+                  <div class="color-dot" style="background:#fff;border:.5px solid #d3d1c7" onclick="setAddColor('#fff',this)"></div>
+                </div>
+              </div>
+            </div>
+            <div id="add-canvas-base" style="display:none">
+              <div class="base-scroll">
+                <div class="base-cat-label">동물형</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickAddBase(this,'')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="3"/></svg></div>
+                  <div class="base-char-opt sel" id="add-base-default" onclick="pickAddBase(this,'🐻')">🐻</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🐱')">🐱</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🐸')">🐸</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🐺')">🐺</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🦁')">🦁</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🐼')">🐼</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🐰')">🐰</div>
+                </div>
+                <div class="base-cat-label">판타지·오브젝트</div>
+                <div class="base-char-grid">
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🧙')">🧙</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🧚')">🧚</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🤖')">🤖</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'👾')">👾</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'⭐')">⭐</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🌙')">🌙</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'🔮')">🔮</div>
+                  <div class="base-char-opt" onclick="pickAddBase(this,'💎')">💎</div>
+                </div>
+              </div>
+            </div>
+            <div id="add-canvas-sticker" style="display:none">
+              <div class="sticker-scroll">
+                <div class="sticker-grid">
+                  <div class="sticker-opt" onclick="addAddSticker('❤️')">❤️</div>
+                  <div class="sticker-opt" onclick="addAddSticker('✨')">✨</div>
+                  <div class="sticker-opt" onclick="addAddSticker('🔥')">🔥</div>
+                  <div class="sticker-opt" onclick="addAddSticker('💫')">💫</div>
+                  <div class="sticker-opt" onclick="addAddSticker('🌟')">🌟</div>
+                  <div class="sticker-opt" onclick="addAddSticker('☀️')">☀️</div>
+                  <div class="sticker-opt" onclick="addAddSticker('🌸')">🌸</div>
+                  <div class="sticker-opt" onclick="addAddSticker('🎨')">🎨</div>
+                  <div class="sticker-opt" onclick="addAddSticker('🎵')">🎵</div>
+                  <div class="sticker-opt" onclick="addAddSticker('🎮')">🎮</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="preview-row">
+            <div class="canvas-preview" id="add-canvas-preview">🐻</div>
+            <div style="font-size:12px;color:#888780;line-height:1.6">이 아이덴티티의<br>캐릭터를 그려보세요</div>
+          </div>
+        </div>
+
+        <!-- step 2: 태그 -->
+        <div id="add-step2" style="display:none">
+          <div class="section-title">이 아이덴티티를 표현하는 단어들</div>
+          <div style="font-size:11px;color:#888780;margin-bottom:12px">첫 번째 아이덴티티와 다른 나를 표현해보세요</div>
+          <div style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px" id="add-val-tags">
+            <div class="tag" onclick="toggleTag(this)">자유로운</div>
+            <div class="tag" onclick="toggleTag(this)">창의적</div>
+            <div class="tag" onclick="toggleTag(this)">야행성</div>
+            <div class="tag" onclick="toggleTag(this)">내향적</div>
+            <div class="tag" onclick="toggleTag(this)">외향적</div>
+            <div class="tag" onclick="toggleTag(this)">도전적</div>
+            <div class="tag" onclick="toggleTag(this)">감성적</div>
+            <div class="tag" onclick="toggleTag(this)">논리적</div>
+            <div class="tag" onclick="toggleTag(this)">따뜻한</div>
+            <div class="tag" onclick="toggleTag(this)">사려깊은</div>
+            <div class="tag" onclick="toggleTag(this)">유머러스</div>
+            <div class="tag" onclick="toggleTag(this)">조용한</div>
+            <div class="tag" onclick="toggleTag(this)">활발한</div>
+            <div class="tag" onclick="toggleTag(this)">독립적</div>
+            <div class="tag" onclick="toggleTag(this)">공감능력</div>
+            <div class="tag" onclick="toggleTag(this)">호기심</div>
+            <div class="tag" onclick="toggleTag(this)">완벽주의</div>
+            <div class="tag" onclick="toggleTag(this)">즉흥적</div>
+            <div class="tag" onclick="toggleTag(this)">계획적</div>
+            <div class="tag" onclick="toggleTag(this)">긍정적</div>
+            <div class="tag" onclick="toggleTag(this)">현실적</div>
+            <div class="tag" onclick="toggleTag(this)">몽상가</div>
+            <div class="tag" onclick="toggleTag(this)">아침형</div>
+            <div class="tag" onclick="toggleTag(this)">미식가</div>
+            <div class="tag" onclick="toggleTag(this)">독서가</div>
+            <div class="tag" onclick="toggleTag(this)">운동파</div>
+            <div class="tag" onclick="toggleTag(this)">집순이·집돌이</div>
+          </div>
+          <div class="field-label">한 줄 소개</div>
+          <input class="field-input" type="text" placeholder="이 아이덴티티를 한 문장으로" id="add-inp-bio">
+        </div>
+      </div>
+      <div class="signup-footer">
+        <button class="btn-primary" id="add-id-next-btn" onclick="addIdentityNext()">다음</button>
+      </div>
+    </div>
+
+    <!-- 아이덴티티 전환 바텀시트 -->
+    <div class="identity-sheet-backdrop" id="identity-backdrop" onclick="closeIdentitySheet()"></div>
+    <div class="identity-sheet" id="identity-sheet">
+      <div class="sheet-handle"></div>
+      <div class="sheet-title">나의 아이덴티티</div>
+
+      <div id="identity-list">
+        <!-- JS로 렌더링 -->
+      </div>
+
+      <div class="sheet-divider"></div>
+      <!-- 무료 슬롯: 첫 번째 추가 (일회결제) -->
+      <div id="identity-add-row" onclick="addIdentity()">
+        <!-- JS로 동적 렌더링 -->
+      </div>
+    </div>
+
+    <!-- 친구 요청 차단 모달 -->
+    <div class="block-modal-backdrop" id="friend-block-modal">
+      <div class="block-modal">
+        <div class="block-modal-icon">🚫</div>
+        <div class="block-modal-title">친구 요청 불가</div>
+        <div class="block-modal-desc" id="friend-block-desc">이미 다른 아이덴티티로 이 유저와 친구예요.<br><strong>동일한 유저에게 여러 아이덴티티로 친구 요청을 보낼 수 없어요.</strong></div>
+        <button class="block-modal-btn" onclick="closeFriendBlockModal()">확인</button>
+      </div>
+    </div>
+
+    <!-- 그룹 채팅 차단 모달 -->
+    <div class="block-modal-backdrop" id="group-block-modal">
+      <div class="block-modal">
+        <div class="block-modal-icon">🚫</div>
+        <div class="block-modal-title">입장 불가</div>
+        <div class="block-modal-desc">같은 계정의 다른 아이덴티티가 이미 이 채팅방에 있어요.<br><strong>동일 계정의 여러 아이덴티티가 같은 채팅방에 입장할 수 없어요.</strong></div>
+        <button class="block-modal-btn" onclick="closeGroupBlockModal()">확인</button>
+      </div>
+    </div>
+
+    <!-- 결제/구독 바텀시트 -->
+    <div class="identity-sheet-backdrop" id="subscribe-backdrop" onclick="closePurchaseSheet()"></div>
+    <div class="purchase-sheet" id="subscribe-sheet">
+      <div class="sheet-handle"></div>
+      <div class="purchase-sheet-title" id="purchase-sheet-title">아이덴티티 추가하기</div>
+
+      <!-- 일회 결제 플랜 -->
+      <div class="plan-card one-time" id="plan-onetime" onclick="selectPlan('onetime')">
+        <div class="plan-card-top">
+          <span class="plan-badge one-time">일회 결제</span>
+        </div>
+        <div class="plan-title">아이덴티티 1개 추가</div>
+        <div class="plan-price">₩12,000</div>
+        <div class="plan-price-sub">1회 결제 · 영구 사용</div>
+        <div class="plan-features">
+          <div class="plan-feature">아이덴티티 1개 추가 (총 3개)</div>
+          <div class="plan-feature">독립적인 캐릭터 · 친구 · 피드</div>
+          <div class="plan-feature">영구 보존</div>
+        </div>
+      </div>
+
+      <!-- 구독 플랜 -->
+      <div class="plan-card subscribe" id="plan-subscribe" onclick="selectPlan('subscribe')">
+        <div class="plan-card-top">
+          <span class="plan-badge subscribe">월 구독</span>
+          <span class="plan-badge popular">추천</span>
+        </div>
+        <div class="plan-title">무제한 아이덴티티</div>
+        <div class="plan-price">₩19,000<span style="font-size:13px;font-weight:400;color:#888780"> / 월</span></div>
+        <div class="plan-price-sub">언제든 해지 가능</div>
+        <div class="plan-features">
+          <div class="plan-feature">아이덴티티 최대 5개</div>
+          <div class="plan-feature">독립적인 캐릭터 · 친구 · 피드</div>
+          <div class="plan-feature">우선 고객 지원</div>
+          <div class="plan-feature">신규 기능 우선 체험</div>
+        </div>
+      </div>
+
+      <div class="purchase-cta">
+        <button class="purchase-btn-primary" id="purchase-confirm-btn" onclick="confirmPurchase()">₩12,000 결제하기</button>
+        <button class="purchase-btn-secondary" onclick="closePurchaseSheet()">나중에</button>
+      </div>
+    </div>
+
+    <!-- 차단 경고 모달 -->
+    <div class="block-modal-backdrop" id="block-modal-backdrop">
+      <div class="block-modal">
+        <div class="block-modal-icon" id="block-modal-icon">🚫</div>
+        <div class="block-modal-title" id="block-modal-title">친구 요청 불가</div>
+        <div class="block-modal-desc" id="block-modal-desc">이미 다른 아이덴티티로 이 유저와 친구 관계예요. 같은 유저에게 여러 아이덴티티로 친구 요청을 보낼 수 없어요.</div>
+        <button class="block-modal-btn" onclick="closeBlockModal()">확인</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav-dots">
+    <div class="dot active" id="dot0"></div><div class="dot" id="dot1"></div><div class="dot" id="dot2"></div>
+    <div class="dot" id="dot3"></div><div class="dot" id="dot4"></div><div class="dot" id="dot5"></div>
+    <div class="dot" id="dot6"></div><div class="dot" id="dot7"></div><div class="dot" id="dot8"></div><div class="dot" id="dot9"></div><div class="dot" id="dot10"></div>
+  </div>
+  <div class="screen-lbl" id="screen-lbl">스플래시</div>
+</div>
+
+<script>
+var screens=['scr-splash','scr-gate','scr-signup','scr-home','scr-explore','scr-messages','scr-chatroom','scr-profile','scr-newpost','scr-editprofile','scr-addidentity'];
+var labels=['스플래시','시작 화면','캐릭터 만들기','홈','둘러보기','메세지','채팅방','내 정보','포스트 작성','프로필 편집','아이덴티티 추가'];
+var currentScreen=0, signupStep=0, selectedChar='🦊', selectedNick='yourname';
+var selectedIdentityTags=['자유로운','야행성'], currentChatIdx=0;
+
+function show(nextId,hideId){
+  document.getElementById(hideId).classList.add('hidden');
+  document.getElementById(nextId).classList.remove('hidden');
+  currentScreen=screens.indexOf(nextId); updateDots();
+}
+function updateDots(){
+  for(var i=0;i<screens.length;i++) document.getElementById('dot'+i).classList.toggle('active',i===currentScreen);
+  document.getElementById('screen-lbl').textContent=labels[currentScreen]||'';
+}
+function switchTab(tab){
+  var from=screens[currentScreen];
+  var map={home:'scr-home',explore:'scr-explore',messages:'scr-messages',myinfo:'scr-profile'};
+  var to=map[tab]; if(!to||from===to) return;
+  if(tab==='explore') buildMasonry();
+  if(tab==='messages') buildMessages();
+  show(to,from);
+}
+function goSignup(){ show('scr-signup','scr-gate'); signupStep=0; updateSignupStep(); }
+function goHome(){ selectedNick=document.getElementById('inp-nick').value||'yourname'; identities[0].nick=selectedNick; updateProfiles(); updateTabIdentityBtn(); show('scr-home','scr-gate'); }
+
+var stepTitles=['계정 만들기','캐릭터 캔버스','아이덴티티 태그'];
+function updateSignupStep(){
+  for(var i=0;i<3;i++){
+    document.getElementById('step'+i).style.display=i===signupStep?'block':'none';
+    document.getElementById('pip'+i).classList.toggle('done',i<=signupStep);
+  }
+  document.getElementById('signup-topbar-title').textContent=stepTitles[signupStep];
+  document.getElementById('signup-next-btn').textContent=signupStep===2?'캐릭터 완성!':'다음';
+}
+function signupNext(){
+  if(signupStep<2){ signupStep++; updateSignupStep(); }
+  else{
+    selectedNick=document.getElementById('inp-nick').value||'yourname';
+    var bio=document.getElementById('inp-bio').value;
+    var els=document.querySelectorAll('#val-tags .tag.sel');
+    selectedIdentityTags=[];
+    for(var i=0;i<els.length;i++) selectedIdentityTags.push(els[i].textContent);
+    document.getElementById('profile-bio').textContent=bio||'나를 한 문장으로 표현하면?';
+    updateProfiles(); show('scr-home','scr-signup'); signupStep=0; updateSignupStep();
+  }
+}
+function toggleTag(el){ el.classList.toggle('sel'); }
+function updateProfiles(){
+  // 현재 활성 아이덴티티의 charDataUrl 우선 사용
+  var aid = getActiveIdentity ? getActiveIdentity() : null;
+  var dataUrl = null;
+  if(aid && aid.charDataUrl){
+    dataUrl = aid.charDataUrl;
+  } else {
+    var c=document.getElementById('draw-canvas');
+    dataUrl = (c && ctx) ? c.toDataURL('image/png') : null;
+  }
+
+  function setAvatar(el, radius){
+    if(!el) return;
+    el.innerHTML=''; el.style.fontSize='0';
+    if(dataUrl){
+      var img=document.createElement('img');
+      img.src=dataUrl;
+      img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:'+(radius||'inherit')+';display:block;';
+      el.appendChild(img);
+    } else {
+      el.style.fontSize='';
+      el.textContent=(aid&&aid.char)||selectedChar||'🦊';
+    }
+  }
+  setAvatar(document.getElementById('home-avatar'));
+  setAvatar(document.getElementById('profile-avatar'));
+  // journey current char
+  var jc=document.getElementById('journey-current-char');
+  if(jc){
+    if(dataUrl){ jc.innerHTML=''; jc.style.fontSize='0'; var ji=document.createElement('img'); ji.src=dataUrl; ji.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;'; jc.appendChild(ji); }
+    else{ jc.style.fontSize=''; jc.textContent=(aid&&aid.char)||selectedChar||'🦊'; }
+  }
+  var nick = (aid&&aid.nick)||selectedNick||'yourname';
+  document.getElementById('profile-name').textContent='@'+nick;
+  var hn=document.getElementById('home-name'); if(hn) hn.textContent='@'+nick;
+  var tags = (aid&&aid.tags)||selectedIdentityTags||[];
+  var ht=document.getElementById('home-hero-tags');
+  if(ht){ ht.innerHTML=''; tags.slice(0,3).forEach(function(t){ var d=document.createElement('div'); d.className='journey-hero-tag'; d.textContent=t; ht.appendChild(d); }); }
+  var pt=document.getElementById('profile-identity-tags'); if(pt){ pt.innerHTML='';
+  tags.slice(0,4).forEach(function(t){ var d=document.createElement('div'); d.className='identity-tag'; d.textContent=t; pt.appendChild(d); }); }
+  var pb=document.getElementById('profile-bio'); if(pb&&aid) pb.textContent=aid.bio||'나를 한 문장으로 표현하면?';
+}
+
+/* canvas */
+var canvasTool='brush', canvasColor='#2C2C2A', canvasDrawing=false, drawStart={x:0,y:0}, snap=null, ctx=null;
+function initCanvas(){
+  var c=document.getElementById('draw-canvas'); ctx=c.getContext('2d');
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,278,160);
+  c.addEventListener('pointerdown',function(e){ canvasDrawing=true; var p=getPos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); if(canvasTool==='circle'||canvasTool==='rect'){ drawStart={x:p.x,y:p.y}; snap=ctx.getImageData(0,0,278,160); } });
+  c.addEventListener('pointermove',function(e){ if(!canvasDrawing) return; var p=getPos(e);
+    if(canvasTool==='brush'){ ctx.strokeStyle=canvasColor; ctx.lineWidth=4; ctx.lineCap='round'; ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+    else if(canvasTool==='eraser'){ ctx.strokeStyle='#fff'; ctx.lineWidth=18; ctx.lineCap='round'; ctx.lineTo(p.x,p.y); ctx.stroke(); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+    else if(canvasTool==='circle'||canvasTool==='rect'){ ctx.putImageData(snap,0,0); ctx.strokeStyle=canvasColor; ctx.lineWidth=3; ctx.beginPath();
+      if(canvasTool==='circle'){ var rx=(p.x-drawStart.x)/2,ry=(p.y-drawStart.y)/2; ctx.ellipse(drawStart.x+rx,drawStart.y+ry,Math.abs(rx),Math.abs(ry),0,0,2*Math.PI); }
+      else{ ctx.rect(drawStart.x,drawStart.y,p.x-drawStart.x,p.y-drawStart.y); } ctx.stroke(); }
+  });
+  c.addEventListener('pointerup',function(){ canvasDrawing=false; updateCanvasPreview(); });
+  c.addEventListener('pointerleave',function(){ canvasDrawing=false; });
+}
+function getPos(e){ var r=document.getElementById('draw-canvas').getBoundingClientRect(); var sx=278/r.width; return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sx}; }
+function setTool(t){ canvasTool=t; document.querySelectorAll('.tool-btn').forEach(function(b){b.classList.remove('active');}); var el=document.getElementById('tool-'+t); if(el) el.classList.add('active'); }
+function setColor(c,el){ canvasColor=c; document.querySelectorAll('.color-dot').forEach(function(d){d.classList.remove('active');}); el.classList.add('active'); if(canvasTool==='eraser') setTool('brush'); }
+function clearCanvas(){ if(ctx){ ctx.fillStyle='#fff'; ctx.fillRect(0,0,278,160); updateCanvasPreview(); } }
+function switchCanvasTab(tab,el){
+  document.querySelectorAll('.canvas-tab').forEach(function(t){t.classList.remove('active');}); el.classList.add('active');
+  document.getElementById('canvas-draw').style.display=tab==='draw'?'block':'none';
+  document.getElementById('canvas-base').style.display=tab==='base'?'block':'none';
+  document.getElementById('canvas-sticker').style.display=tab==='sticker'?'block':'none';
+}
+function pickBlank(el){
+  document.querySelectorAll('.base-char-opt').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel');
+  selectedChar='';
+  if(ctx){ ctx.fillStyle='#fff'; ctx.fillRect(0,0,278,160); }
+  updateCanvasPreview();
+}
+function pickBase(el,emoji){
+  document.querySelectorAll('.base-char-opt').forEach(function(e){e.classList.remove('sel');});
+  el.classList.add('sel'); selectedChar=emoji;
+  if(ctx){
+    ctx.fillStyle='#fff'; ctx.fillRect(0,0,278,160);
+    ctx.font='90px serif';
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(emoji,139,80);
+    ctx.textAlign='start'; ctx.textBaseline='alphabetic';
+  }
+  updateCanvasPreview();
+}
+function updateCanvasPreview(){
+  if(!ctx) return;
+  var c=document.getElementById('draw-canvas');
+  var dataUrl=c.toDataURL('image/png');
+  var prev=document.getElementById('canvas-preview-box');
+  prev.innerHTML=''; prev.style.padding='0';
+  var img=document.createElement('img'); img.src=dataUrl; img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:18px;';
+  prev.appendChild(img);
+}
+function addSticker(s){ if(!ctx) return; ctx.font='38px serif'; ctx.fillText(s,60+Math.random()*120,30+Math.random()*100); updateCanvasPreview(); }
+
+/* messages */
+var friends=[
+  {emoji:'🐻',name:'@bearhug', bg:'#FFF3E8',seen:false, accountId:'acc_001'},
+  {emoji:'🌙',name:'@nightowl',bg:'#E8E6FF',seen:false, accountId:'acc_002'},
+  {emoji:'🐱',name:'@kittycat',bg:'#FFF0F5',seen:true,  accountId:'acc_003'},
+  {emoji:'⭐',name:'@starboy', bg:'#FFFBE6',seen:true,  accountId:'acc_004'},
+  {emoji:'🌿',name:'@greeny',  bg:'#E8F5EE',seen:false, accountId:'acc_005'},
+  {emoji:'🦋',name:'@flutter', bg:'#F5EEFF',seen:true,  accountId:'acc_006'},
+];
+var dmList=[
+  {emoji:'🐻',name:'@bearhug', bg:'#FFF3E8',preview:'오늘 같이 포스트 올릴래?',time:'방금',unread:true, online:true, accountId:'acc_001',messages:[{from:'them',text:'안녕! 오늘 날씨 좋다'},{from:'me',text:'응 완전 좋아 ☀️'},{from:'them',text:'오늘 같이 포스트 올릴래?'}]},
+  {emoji:'🌙',name:'@nightowl',bg:'#E8E6FF',preview:'야행성 클럽 ㄱ?',        time:'2분', unread:true, online:true, accountId:'acc_002',messages:[{from:'them',text:'야행성 클럽 ㄱ?'},{from:'me',text:'ㅋㅋ 언제?'}]},
+  {emoji:'🐱',name:'@kittycat',bg:'#FFF0F5',preview:'수채화 스타일 어때보여?',  time:'1시간',unread:false,online:false,accountId:'acc_003',messages:[{from:'me',text:'수채화 스타일 바꿨어?'},{from:'them',text:'응! 어때보여?'},{from:'me',text:'너무 잘 어울린다'}]},
+  {emoji:'⭐',name:'@starboy', bg:'#FFFBE6',preview:'별 그림 올렸어 봐봐',     time:'어제', unread:false,online:false,accountId:'acc_004',messages:[{from:'them',text:'별 그림 올렸어 봐봐'},{from:'me',text:'대박 예쁘다!!'}]},
+  {emoji:'🌿',name:'@greeny',  bg:'#E8F5EE',preview:'자연 산책 같이 갈래?',    time:'2일', unread:false,online:true, accountId:'acc_005',messages:[{from:'me',text:'자연 산책 같이 갈래?'},{from:'them',text:'좋아! 주말에 어때?'}]},
+  {emoji:'🦋',name:'@flutter', bg:'#F5EEFF',preview:'변화를 즐기는 중이야',    time:'3일', unread:false,online:false,accountId:'acc_006',messages:[{from:'them',text:'변화를 즐기는 중이야'},{from:'me',text:'멋있다 나도 그러고 싶다'}]},
+];
+function buildMessages(){
+  var strip=document.getElementById('friends-strip-list');
+  if(strip.children.length===0){ friends.forEach(function(f){ var b=document.createElement('div'); b.className='friend-bubble'; var r=document.createElement('div'); r.className='friend-ring'+(f.seen?' seen':''); var inn=document.createElement('div'); inn.className='friend-inner'; inn.style.background=f.bg; inn.textContent=f.emoji; r.appendChild(inn); var nm=document.createElement('div'); nm.className='friend-name'; nm.textContent=f.name; b.appendChild(r); b.appendChild(nm); strip.appendChild(b); }); }
+  var grid=document.getElementById('dm-grid');
+  if(grid.children.length===0){ dmList.forEach(function(dm,idx){ var row=document.createElement('div'); row.className='dm-row'+(dm.unread?' unread':''); row.onclick=function(){openChat(idx);}; var aw=document.createElement('div'); aw.className='dm-row-avatar-wrap'; var av=document.createElement('div'); av.className='dm-row-avatar'; av.style.background=dm.bg; av.textContent=dm.emoji; aw.appendChild(av); if(dm.online){var od=document.createElement('div'); od.className='dm-row-online'; aw.appendChild(od);} var bd=document.createElement('div'); bd.className='dm-row-body'; var tp=document.createElement('div'); tp.className='dm-row-top'; var nm=document.createElement('div'); nm.className='dm-row-name'; nm.textContent=dm.name; var tm=document.createElement('div'); tm.className='dm-row-time'; tm.textContent=dm.time; tp.appendChild(nm); tp.appendChild(tm); var bt=document.createElement('div'); bt.className='dm-row-bottom'; var pv=document.createElement('div'); pv.className='dm-row-preview'; pv.textContent=dm.preview; bt.appendChild(pv); if(dm.unread){var dt=document.createElement('div'); dt.className='dm-row-dot'; bt.appendChild(dt);} bd.appendChild(tp); bd.appendChild(bt); row.appendChild(aw); row.appendChild(bd); grid.appendChild(row); if(idx<dmList.length-1){var dv=document.createElement('div'); dv.className='dm-divider'; grid.appendChild(dv);} }); }
+}
+function openChat(idx){ currentChatIdx=idx; var dm=dmList[idx]; dm.unread=false; checkDmBlock(idx); document.getElementById('chat-avatar-top').textContent=dm.emoji; document.getElementById('chat-avatar-top').style.background=dm.bg; document.getElementById('chat-peer-name').textContent=dm.name; var el=document.getElementById('chat-messages'); el.innerHTML=''; dm.messages.forEach(function(m){appendBubble(m.from,m.text,false);}); el.scrollTop=el.scrollHeight; show('scr-chatroom','scr-messages'); }
+function appendBubble(from,text,scroll){ var el=document.getElementById('chat-messages'); var w=document.createElement('div'); w.style.display='flex'; w.style.flexDirection='column'; var b=document.createElement('div'); b.className='bubble '+from; b.textContent=text; var t=document.createElement('div'); t.className='bubble-time'+(from==='them'?' left':''); t.textContent='방금'; w.appendChild(b); w.appendChild(t); el.appendChild(w); if(scroll!==false) el.scrollTop=el.scrollHeight; }
+function sendMsg(){ var inp=document.getElementById('chat-input-field'); var text=inp.value.trim(); if(!text) return; dmList[currentChatIdx].messages.push({from:'me',text:text}); appendBubble('me',text,true); inp.value=''; }
+
+/* explore — 포스트 태그만, 아이덴티티 태그 없음 */
+var posts=[
+  {emoji:'🦊',user:'@foxday',  bg:'#EEEDFE',caption:'오늘의 나는 조금 더 자유로운 기분',postTags:['#오늘일상','#캔버스아트'],h:148,accountId:'acc_007'},
+  {emoji:'🌙',user:'@nightowl',bg:'#E8E6FF',caption:'야행성 클럽 모여라',              postTags:['#야행성클럽','#밤감성'],    h:112,accountId:'acc_002'},
+  {emoji:'🐱',user:'@kittycat',bg:'#FFF0F5',caption:'고양이처럼 살고 싶은 하루',       postTags:['#일상','#힐링'],            h:130,accountId:'acc_003'},
+  {emoji:'⭐',user:'@starboy', bg:'#FFFBE6',caption:'반짝이는 것들을 좋아해요',        postTags:['#별','#감성사진'],          h:100,accountId:'acc_004'},
+  {emoji:'🌿',user:'@greeny',  bg:'#E8F5EE',caption:'자연 속에서 충전 중',             postTags:['#자연','#산책'],            h:155,accountId:'acc_005'},
+  {emoji:'🦋',user:'@flutter', bg:'#F5EEFF',caption:'변화를 두려워하지 않아요',        postTags:['#성장','#변화'],            h:118,accountId:'acc_006'},
+  {emoji:'🐸',user:'@froggie', bg:'#EDFFF4',caption:'비 오는 날이 제일 좋아',          postTags:['#비오는날','#개구리뷰'],    h:136,accountId:'acc_008'},
+  {emoji:'🐻',user:'@bearhug', bg:'#FFF3E8',caption:'따뜻한 포옹이 필요한 날',        postTags:['#위로','#따뜻함'],          h:105,accountId:'acc_001'},
+  {emoji:'🌙',user:'@lunatic', bg:'#EEEDFE',caption:'달빛 아래서 생각이 많아지는 밤',  postTags:['#새벽감성','#달빛'],        h:142,accountId:'acc_009'},
+  {emoji:'🦊',user:'@foxrun',bg:'#FFF0E8',caption:'달리는 여우처럼 빠르게',postTags:['#달리기','#운동인'],h:110},
+];
+/* ── 프로필 편집 캔버스 ── */
+var editCtx=null, editTool='brush', editColor='#2C2C2A', editDrawing=false, editDrawStart={x:0,y:0}, editSnap=null;
+
+function initEditCanvas(){
+  var c=document.getElementById('edit-canvas');
+  if(!c||editCtx) return;
+  editCtx=c.getContext('2d');
+  editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130);
+  c.addEventListener('pointerdown',function(e){ editDrawing=true; var p=getEditPos(e); editCtx.beginPath(); editCtx.moveTo(p.x,p.y); if(editTool==='circle'||editTool==='rect'){ editDrawStart={x:p.x,y:p.y}; editSnap=editCtx.getImageData(0,0,278,130); } });
+  c.addEventListener('pointermove',function(e){ if(!editDrawing) return; var p=getEditPos(e);
+    if(editTool==='brush'){ editCtx.strokeStyle=editColor; editCtx.lineWidth=4; editCtx.lineCap='round'; editCtx.lineTo(p.x,p.y); editCtx.stroke(); editCtx.beginPath(); editCtx.moveTo(p.x,p.y); }
+    else if(editTool==='eraser'){ editCtx.strokeStyle='#fff'; editCtx.lineWidth=18; editCtx.lineCap='round'; editCtx.lineTo(p.x,p.y); editCtx.stroke(); editCtx.beginPath(); editCtx.moveTo(p.x,p.y); }
+    else if(editTool==='circle'||editTool==='rect'){ editCtx.putImageData(editSnap,0,0); editCtx.strokeStyle=editColor; editCtx.lineWidth=3; editCtx.beginPath();
+      if(editTool==='circle'){ var rx=(p.x-editDrawStart.x)/2,ry=(p.y-editDrawStart.y)/2; editCtx.ellipse(editDrawStart.x+rx,editDrawStart.y+ry,Math.abs(rx),Math.abs(ry),0,0,2*Math.PI); }
+      else{ editCtx.rect(editDrawStart.x,editDrawStart.y,p.x-editDrawStart.x,p.y-editDrawStart.y); } editCtx.stroke(); }
+  });
+  c.addEventListener('pointerup',function(){ editDrawing=false; updateEditPreview(); });
+  c.addEventListener('pointerleave',function(){ editDrawing=false; });
+}
+function getEditPos(e){ var r=document.getElementById('edit-canvas').getBoundingClientRect(); var sx=278/r.width; return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sx}; }
+function setEditTool(t){ editTool=t; document.querySelectorAll('[id^="etool-"]').forEach(function(b){b.classList.remove('active');}); var el=document.getElementById('etool-'+t); if(el) el.classList.add('active'); }
+function setEditColor(c,el){ editColor=c; el.closest('.edit-canvas-toolbar').querySelectorAll('.color-dot').forEach(function(d){d.classList.remove('active');}); el.classList.add('active'); if(editTool==='eraser') setEditTool('brush'); }
+function clearEditCanvas(){ if(editCtx){ editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130); updateEditPreview(); } }
+function pickEditBase(el,emoji){
+  document.querySelectorAll('#edit-canvas-base .base-char-opt').forEach(function(e){e.classList.remove('sel');}); el.classList.add('sel');
+  if(!editCtx) return;
+  editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130);
+  if(emoji){ editCtx.font='78px serif'; editCtx.textAlign='center'; editCtx.textBaseline='middle'; editCtx.fillText(emoji,139,65); editCtx.textAlign='start'; editCtx.textBaseline='alphabetic'; }
+  updateEditPreview();
+}
+function addEditSticker(s){ if(!editCtx) return; editCtx.font='36px serif'; editCtx.fillText(s,60+Math.random()*120,30+Math.random()*80); updateEditPreview(); }
+function switchEditTab(tab,el){
+  document.querySelectorAll('.edit-canvas-tab').forEach(function(t){t.classList.remove('active');}); el.classList.add('active');
+  document.getElementById('edit-canvas-draw').style.display=tab==='draw'?'block':'none';
+  document.getElementById('edit-canvas-base').style.display=tab==='base'?'block':'none';
+  document.getElementById('edit-canvas-sticker').style.display=tab==='sticker'?'block':'none';
+}
+function updateEditPreview(){
+  if(!editCtx) return;
+  var c=document.getElementById('edit-canvas');
+  var dataUrl=c.toDataURL('image/png');
+  var prev=document.getElementById('edit-avatar-preview');
+  prev.innerHTML=''; prev.style.fontSize='0';
+  var img=document.createElement('img'); img.src=dataUrl;
+  img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:26px;display:block;';
+  prev.appendChild(img);
+}
+function toggleEditTag(el){ el.classList.toggle('sel'); }
+
+function openEditProfile(){
+  initEditCanvas();
+  // 현재 프로필 값 로드
+  var nick=document.getElementById('profile-name').textContent.replace('@','');
+  var bio=document.getElementById('profile-bio').textContent;
+  document.getElementById('edit-nick').value=nick==='yourname'?'':nick;
+  document.getElementById('edit-bio').value=bio==='나를 한 문장으로 표현하면?'?'':bio;
+  // 현재 선택된 태그 동기화
+  var activeTags=selectedIdentityTags||[];
+  document.querySelectorAll('#edit-tag-grid .edit-tag').forEach(function(el){
+    el.classList.toggle('sel', activeTags.indexOf(el.textContent)!==-1);
+  });
+  // 현재 아바타 캔버스에 그리기
+  if(editCtx){
+    editCtx.fillStyle='#fff'; editCtx.fillRect(0,0,278,130);
+    var origCanvas=document.getElementById('draw-canvas');
+    if(origCanvas){ editCtx.drawImage(origCanvas,0,0,278,130); }
+    else if(selectedChar){
+      editCtx.font='78px serif'; editCtx.textAlign='center'; editCtx.textBaseline='middle';
+      editCtx.fillText(selectedChar,139,65); editCtx.textAlign='start'; editCtx.textBaseline='alphabetic';
+    }
+    updateEditPreview();
+  }
+  show('scr-editprofile','scr-profile');
+}
+
+function saveEditProfile(){
+  // 닉네임
+  var nick=document.getElementById('edit-nick').value.trim()||selectedNick;
+  selectedNick=nick;
+  // 한 줄 소개
+  var bio=document.getElementById('edit-bio').value.trim()||'나를 한 문장으로 표현하면?';
+  document.getElementById('profile-bio').textContent=bio;
+  // 태그
+  var selEls=document.querySelectorAll('#edit-tag-grid .edit-tag.sel');
+  selectedIdentityTags=[];
+  selEls.forEach(function(el){ selectedIdentityTags.push(el.textContent); });
+  // 캔버스 → 아바타 반영
+  if(editCtx){
+    var dataUrl=document.getElementById('edit-canvas').toDataURL('image/png');
+    function setAv(id){ var el=document.getElementById(id); el.innerHTML=''; el.style.fontSize='0'; var img=document.createElement('img'); img.src=dataUrl; img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block;'; el.appendChild(img); }
+    setAv('home-avatar'); setAv('profile-avatar');
+    // 원본 캔버스에도 반영
+    var origCanvas=document.getElementById('draw-canvas');
+    if(origCanvas&&ctx){ ctx.drawImage(document.getElementById('edit-canvas'),0,0,278,160); }
+  }
+  updateProfiles();
+  addJourneyItem('char','캐릭터와 프로필을 새롭게 업데이트했어요',[],false);
+  // 현재 아이덴티티 데이터 동기화
+  var aid = getActiveIdentity();
+  aid.nick = selectedNick;
+  aid.char = selectedChar;
+  aid.tags = selectedIdentityTags.slice();
+  if(editCtx) aid.charDataUrl = document.getElementById('edit-canvas').toDataURL('image/png');
+  updateTabIdentityBtn();
+  show('scr-profile','scr-editprofile');
+}
+
+/* ── 내 정보 탭 전환 ── */
+function switchProfileTab(tab){
+  document.getElementById('ptab-profile').classList.toggle('active', tab==='profile');
+  document.getElementById('ptab-settings').classList.toggle('active', tab==='settings');
+  document.getElementById('pcontent-profile').style.display = tab==='profile' ? 'block' : 'none';
+  document.getElementById('pcontent-settings').style.display = tab==='settings' ? 'block' : 'none';
+}
+
+/* ── 설정 토글 ── */
+function toggleSetting(btn){ btn.classList.toggle('on'); }
+
+function toggleDark(btn){
+  btn.classList.toggle('on');
+  var darkOn = btn.classList.contains('on');
+  document.body.classList.toggle('dark', darkOn);
+
+  // 모든 흰 배경 요소 강제 적용
+  var darkBg = '#1C1C20', darkBg2 = '#252529', darkBorder = '#2E2E35';
+  var whiteSels = [
+    '.home-tabbar','.home-topbar','.topbar','.msg-topbar','.chat-topbar',
+    '.profile-tabs','.profile-content','.settings-body',
+    '.s-gate','.gate-bottom','.gate-top',
+    '.friends-strip','.dm-list','.explore-search',
+    '.chat-input-bar','.signup-body','.signup-footer',
+    '.canvas-tabs','.canvas-toolbar','.canvas-wrap',
+    '.edit-canvas-tabs','.edit-canvas-toolbar',
+    '.base-scroll','.sticker-scroll','.edit-base-scroll','.edit-sticker-scroll',
+    '.newpost-body','.post-tile','.post-tag-section',
+    '.post-media-zone','.post-media-btn',
+    '.edit-body','.edit-avatar-section','.edit-field-section',
+    '.edit-canvas-mini-wrap'
+  ];
+  whiteSels.forEach(function(sel){
+    document.querySelectorAll(sel).forEach(function(el){
+      el.style.background = darkOn ? darkBg : '';
+      el.style.borderColor = darkOn ? darkBorder : '';
+    });
+  });
+
+  // settings-row (카드)
+  document.querySelectorAll('.settings-row').forEach(function(el){
+    el.style.background = darkOn ? darkBg2 : '';
+    el.style.borderColor = darkOn ? darkBorder : '';
+  });
+  document.querySelectorAll('.settings-item').forEach(function(el){
+    el.style.borderColor = darkOn ? darkBorder : '';
+  });
+
+  // 텍스트 색상
+  document.querySelectorAll('.settings-row-label').forEach(function(el){
+    if(!el.classList.contains('settings-danger'))
+      el.style.color = darkOn ? '#C8C6D8' : '';
+  });
+  document.querySelectorAll('.settings-row-desc,.settings-section-label,.settings-row-value').forEach(function(el){
+    el.style.color = darkOn ? '#555' : '';
+  });
+  document.querySelectorAll('.settings-select').forEach(function(el){
+    el.style.background = darkOn ? '#2E2E35' : '';
+    el.style.color = darkOn ? '#C8C6D8' : '';
+  });
+
+  // 아이콘 배경
+  var iconColorMap = {purple: darkOn?'#2A2A4A':'', blue: darkOn?'#1A2A3A':'', green: darkOn?'#162A22':'', orange: darkOn?'#2A1E10':'', danger: darkOn?'#3A1515':''};
+  Object.keys(iconColorMap).forEach(function(cls){
+    document.querySelectorAll('.settings-item-icon.'+cls).forEach(function(el){
+      el.style.background = iconColorMap[cls];
+    });
+  });
+
+  // 버전 텍스트
+  document.querySelectorAll('.settings-body > div:last-child').forEach(function(el){
+    el.style.color = darkOn ? '#444' : '';
+  });
+
+  // 메세지 화면 텍스트
+  document.querySelectorAll('.msg-topbar-title').forEach(function(el){ el.style.color = darkOn?'#F0EFF8':''; });
+  document.querySelectorAll('.friends-strip-label,.dm-section-label,.friend-name').forEach(function(el){ el.style.color = darkOn?'#666':''; });
+  document.querySelectorAll('.dm-row').forEach(function(el){ el.style.background = darkOn?'#1C1C20':''; });
+  document.querySelectorAll('.dm-row-name').forEach(function(el){ el.style.color = darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.dm-row.unread .dm-row-name').forEach(function(el){ el.style.color = darkOn?'#F0EFF8':''; });
+  document.querySelectorAll('.dm-row-preview').forEach(function(el){ el.style.color = darkOn?'#555':''; });
+  document.querySelectorAll('.dm-row.unread .dm-row-preview').forEach(function(el){ el.style.color = darkOn?'#AFA9EC':''; });
+  document.querySelectorAll('.dm-row-time').forEach(function(el){ el.style.color = darkOn?'#555':''; });
+  document.querySelectorAll('.dm-row.unread .dm-row-time').forEach(function(el){ el.style.color = darkOn?'#7F77DD':''; });
+  document.querySelectorAll('.dm-divider').forEach(function(el){ el.style.background = darkOn?'#2E2E35':''; });
+  document.querySelectorAll('.tl-dot').forEach(function(el){ el.style.borderColor = darkOn?'#141418':'#F7F5EF'; el.style.borderRadius='50%'; });
+  document.querySelectorAll('.journey-scroll').forEach(function(el){ el.style.background = darkOn?'#141418':''; });
+  document.querySelectorAll('.dm-list,.friends-strip,.s-messages').forEach(function(el){ el.style.background = darkOn?'#1C1C20':''; });
+  document.querySelectorAll('.msg-topbar').forEach(function(el){ el.style.background=darkOn?'#1C1C20':''; el.style.borderColor=darkOn?'#2E2E35':''; });
+
+  // 채팅방
+  document.querySelectorAll('.chat-peer-name').forEach(function(el){ el.style.color = darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.bubble.them').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.chat-input').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#C8C6D8':''; });
+
+  // 둘러보기
+  document.querySelectorAll('.tile').forEach(function(el){ el.style.background=darkOn?'#1E1E24':''; });
+  document.querySelectorAll('.tile-username').forEach(function(el){ el.style.color=darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.tile-caption').forEach(function(el){ el.style.color=darkOn?'#888':''; });
+  document.querySelectorAll('.tile-post-tag').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#AFA9EC':''; });
+  document.querySelectorAll('.search-bar').forEach(function(el){ el.style.background=darkOn?'#252529':''; el.style.color=darkOn?'#C8C6D8':''; });
+  document.querySelectorAll('.explore-search').forEach(function(el){ el.style.borderColor=darkOn?'#2E2E35':''; });
+}
+
+/* ── 아이덴티티 데이터 ── */
+var identities = [
+  {
+    id: 1,
+    nick: 'yourname',
+    char: '🦊',
+    charDataUrl: null,
+    bio: '나를 한 문장으로 표현하면?',
+    tags: ['자유로운','야행성'],
+    notifCount: 0,
+    friends: [],
+    posts: []
+  }
+];
+var activeIdentityIdx = 0;
+
+function getActiveIdentity(){ return identities[activeIdentityIdx]; }
+
+function renderIdentitySheet(){
+  var list = document.getElementById('identity-list');
+  if(!list) return;
+  list.innerHTML = '';
+  identities.forEach(function(id, idx){
+    var row = document.createElement('div');
+    row.className = 'identity-row';
+    row.onclick = function(){ switchIdentity(idx); };
+
+    var av = document.createElement('div');
+    av.className = 'identity-row-avatar' + (idx === activeIdentityIdx ? ' active-id' : '');
+    if(id.charDataUrl){
+      var img = document.createElement('img'); img.src = id.charDataUrl; av.appendChild(img);
+    } else { av.textContent = id.char; }
+
+    var body = document.createElement('div'); body.className = 'identity-row-body';
+    var name = document.createElement('div'); name.className = 'identity-row-name'; name.textContent = '@' + id.nick;
+    var tags = document.createElement('div'); tags.className = 'identity-row-tags'; tags.textContent = id.tags.slice(0,3).join(' · ') || '태그 없음';
+    body.appendChild(name); body.appendChild(tags);
+
+    var right = document.createElement('div'); right.className = 'identity-row-right';
+    if(idx === activeIdentityIdx){
+      var badge = document.createElement('div'); badge.className = 'identity-active-badge'; badge.textContent = '활성';
+      right.appendChild(badge);
+    } else if(id.notifCount > 0){
+      var notif = document.createElement('div'); notif.className = 'identity-notif-badge'; notif.textContent = id.notifCount;
+      right.appendChild(notif);
+    }
+
+    row.appendChild(av); row.appendChild(body); row.appendChild(right);
+    list.appendChild(row);
+  });
+
+  // 추가 슬롯 렌더링
+  var addRow = document.getElementById('identity-add-row');
+  if(addRow){
+    addRow.innerHTML = '';
+    if(identities.length < 2){
+      // 무료 슬롯 남음 — 일반 추가 버튼
+      var freeRow = document.createElement('div');
+      freeRow.className = 'identity-add-row';
+      freeRow.style.cssText = 'display:flex;';
+      freeRow.onclick = function(){ addIdentity(false); };
+      freeRow.innerHTML = '<div class="identity-add-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#B4B2A9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><div class="identity-add-label">새 아이덴티티 추가 <span style="font-size:11px;color:#B4B2A9">(1개 남음)</span></div>';
+      addRow.appendChild(freeRow);
+    } else {
+      // 2개 이상 — 결제/구독 유도 행
+      var paidRow = document.createElement('div');
+      paidRow.className = 'identity-locked-row';
+      paidRow.innerHTML = '<div class="identity-locked-avatar">🔒</div><div class="identity-locked-body"><div class="identity-locked-title">아이덴티티 추가</div><div class="identity-locked-desc">일회 결제 또는 구독으로 추가할 수 있어요</div></div>';
+      var btnWrap = document.createElement('div');
+      btnWrap.style.cssText = 'display:flex;flex-direction:column;gap:5px;flex-shrink:0';
+      var btn1 = document.createElement('button');
+      btn1.className = 'identity-locked-btn one-time';
+      btn1.textContent = '₩12,000';
+      btn1.onclick = function(e){ e.stopPropagation(); showPurchaseSheet(); };
+      var btn2 = document.createElement('button');
+      btn2.className = 'identity-locked-btn subscribe';
+      btn2.textContent = '₩19,000/월';
+      btn2.onclick = function(e){ e.stopPropagation(); showSubscribePrompt(); };
+      btnWrap.appendChild(btn1); btnWrap.appendChild(btn2);
+      paidRow.appendChild(btnWrap);
+      addRow.appendChild(paidRow);
+    }
+  }
+}
+
+function openIdentitySheet(){
+  renderIdentitySheet();
+  document.getElementById('identity-backdrop').classList.add('open');
+  document.getElementById('identity-sheet').classList.add('open');
+}
+
+function closeIdentitySheet(){
+  document.getElementById('identity-backdrop').classList.remove('open');
+  document.getElementById('identity-sheet').classList.remove('open');
+}
+
+function switchIdentity(idx){
+  if(idx === activeIdentityIdx){ closeIdentitySheet(); return; }
+  activeIdentityIdx = idx;
+  var id = getActiveIdentity();
+  // 알림 dot 초기화
+  id.notifCount = 0;
+  // 프로필 데이터 교체
+  selectedNick = id.nick;
+  selectedChar = id.char;
+  selectedIdentityTags = id.tags.slice();
+  // UI 업데이트
+  updateProfiles();
+  updateTabIdentityBtn();
+  updateNotifDots();
+  closeIdentitySheet();
+}
+
+function updateTabIdentityBtn(){
+  var id = getActiveIdentity();
+  var avatars = document.querySelectorAll('#tab-identity-avatar');
+  avatars.forEach(function(av){
+    av.innerHTML = '';
+    if(id.charDataUrl){
+      var img = document.createElement('img'); img.src = id.charDataUrl;
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:12px;display:block;';
+      av.appendChild(img);
+    } else {
+      av.textContent = id.char;
+    }
+  });
+}
+
+function updateNotifDots(){
+  var hasNotif = identities.some(function(id, idx){ return idx !== activeIdentityIdx && id.notifCount > 0; });
+  document.querySelectorAll('#tab-identity-notif').forEach(function(dot){
+    dot.classList.toggle('hidden', !hasNotif);
+  });
+}
+
+/* addIdentity / finishAddIdentity → 전용 화면으로 이동 (위에서 재정의됨) */
+
+/* ══════════════════════════════════════
+   아이덴티티 보호 규칙
+   ══════════════════════════════════════ */
+
+/* 현재 활성 아이덴티티의 친구 목록에서 accountId 목록 반환 */
+function getActiveFriendAccountIds(){
+  var aid = getActiveIdentity();
+  // 프로토타입: dmList에서 현재 아이덴티티 친구 목록 시뮬레이션
+  // 실제 서비스에서는 aid.friends 배열에서 가져옴
+  return dmList.map(function(dm){ return dm.accountId; });
+}
+
+/* 다른 아이덴티티의 친구 accountId 목록 반환 */
+function getOtherIdentitiesFriendAccountIds(){
+  // 프로토타입 시뮬레이션:
+  // 두 번째 아이덴티티가 있으면 @bearhug, @nightowl 과 친구라고 가정
+  if(identities.length < 2) return [];
+  return ['acc_001','acc_002']; // 시뮬레이션 데이터
+}
+
+/* 규칙 1+2: 친구 요청 차단 — 다른 아이덴티티가 이미 친구인 유저 */
+function checkFriendRequestBlock(accountId){
+  var otherFriendIds = getOtherIdentitiesFriendAccountIds();
+  return otherFriendIds.indexOf(accountId) !== -1;
+}
+
+/* 규칙 3: 그룹 채팅방 중복 입장 차단 */
+function checkGroupChatBlock(roomId){
+  // 프로토타입: roomId 'group_001' 에 다른 아이덴티티가 있다고 가정
+  if(identities.length < 2) return false;
+  return roomId === 'group_001';
+}
+
+/* 모달 열기 */
+function showBlockModal(type){
+  var icon  = document.getElementById('block-modal-icon');
+  var title = document.getElementById('block-modal-title');
+  var desc  = document.getElementById('block-modal-desc');
+  if(type === 'friend'){
+    icon.textContent  = '🚫';
+    title.textContent = '친구 요청 불가';
+    desc.textContent  = '이미 다른 아이덴티티로 이 유저와 친구 관계예요. 같은 유저에게 여러 아이덴티티로 친구 요청을 보낼 수 없어요.';
+  } else if(type === 'group'){
+    icon.textContent  = '⛔';
+    title.textContent = '그룹 채팅 입장 불가';
+    desc.textContent  = '같은 계정의 다른 아이덴티티가 이미 이 채팅방에 있어요. 동일 계정의 여러 아이덴티티로 같은 채팅방에 입장할 수 없어요.';
+  }
+  document.getElementById('block-modal-backdrop').classList.add('open');
+}
+function closeBlockModal(){
+  document.getElementById('block-modal-backdrop').classList.remove('open');
+}
+
+/* 친구 요청 시도 (DM 탭의 새 대화 시작 시뮬레이션) */
+function tryAddFriend(accountId, name){
+  if(checkFriendRequestBlock(accountId)){
+    showBlockModal('friend');
+    return false;
+  }
+  alert('@'+name+' 에게 친구 요청을 보냈어요!');
+  return true;
+}
+
+/* 그룹 채팅 입장 시도 시뮬레이션 */
+function tryJoinGroupChat(roomId){
+  if(checkGroupChatBlock(roomId)){
+    showBlockModal('group');
+    return false;
+  }
+  alert('그룹 채팅방에 입장했어요!');
+  return true;
+}
+
+/* ══════════════════════════════════════ */
+
+/* ── 아이덴티티 추가 전용 캔버스 ── */
+var addCtx=null, addTool='brush', addColor='#2C2C2A', addDrawing=false, addDrawStart={x:0,y:0}, addSnap=null;
+var addStep=0, addSelectedChar='🐻';
+
+var addStepTitles=['새 아이덴티티','캐릭터 캔버스','아이덴티티 태그'];
+
+function initAddCanvas(){
+  var c=document.getElementById('add-draw-canvas');
+  if(!c||addCtx) return;
+  addCtx=c.getContext('2d');
+  addCtx.fillStyle='#fff'; addCtx.fillRect(0,0,278,160);
+  // 기본 캐릭터 그리기
+  addCtx.font='90px serif'; addCtx.textAlign='center'; addCtx.textBaseline='middle';
+  addCtx.fillText('🐻',139,80);
+  addCtx.textAlign='start'; addCtx.textBaseline='alphabetic';
+  updateAddPreview();
+
+  c.addEventListener('pointerdown',function(e){ addDrawing=true; var p=getAddPos(e); addCtx.beginPath(); addCtx.moveTo(p.x,p.y); if(addTool==='circle'||addTool==='rect'){ addDrawStart={x:p.x,y:p.y}; addSnap=addCtx.getImageData(0,0,278,160); } });
+  c.addEventListener('pointermove',function(e){ if(!addDrawing) return; var p=getAddPos(e);
+    if(addTool==='brush'){ addCtx.strokeStyle=addColor; addCtx.lineWidth=4; addCtx.lineCap='round'; addCtx.lineTo(p.x,p.y); addCtx.stroke(); addCtx.beginPath(); addCtx.moveTo(p.x,p.y); }
+    else if(addTool==='eraser'){ addCtx.strokeStyle='#fff'; addCtx.lineWidth=18; addCtx.lineCap='round'; addCtx.lineTo(p.x,p.y); addCtx.stroke(); addCtx.beginPath(); addCtx.moveTo(p.x,p.y); }
+    else if(addTool==='circle'||addTool==='rect'){ addCtx.putImageData(addSnap,0,0); addCtx.strokeStyle=addColor; addCtx.lineWidth=3; addCtx.beginPath();
+      if(addTool==='circle'){ var rx=(p.x-addDrawStart.x)/2,ry=(p.y-addDrawStart.y)/2; addCtx.ellipse(addDrawStart.x+rx,addDrawStart.y+ry,Math.abs(rx),Math.abs(ry),0,0,2*Math.PI); }
+      else{ addCtx.rect(addDrawStart.x,addDrawStart.y,p.x-addDrawStart.x,p.y-addDrawStart.y); } addCtx.stroke(); }
+  });
+  c.addEventListener('pointerup',function(){ addDrawing=false; updateAddPreview(); });
+  c.addEventListener('pointerleave',function(){ addDrawing=false; });
+}
+
+function getAddPos(e){ var r=document.getElementById('add-draw-canvas').getBoundingClientRect(); var sx=278/r.width; return {x:(e.clientX-r.left)*sx,y:(e.clientY-r.top)*sx}; }
+function setAddTool(t){ addTool=t; document.querySelectorAll('[id^="addtool-"]').forEach(function(b){b.classList.remove('active');}); var el=document.getElementById('addtool-'+t); if(el) el.classList.add('active'); }
+function setAddColor(c,el){ addColor=c; el.closest('.canvas-toolbar').querySelectorAll('.color-dot').forEach(function(d){d.classList.remove('active');}); el.classList.add('active'); if(addTool==='eraser') setAddTool('brush'); }
+function clearAddCanvas(){ if(addCtx){ addCtx.fillStyle='#fff'; addCtx.fillRect(0,0,278,160); updateAddPreview(); } }
+function pickAddBase(el,emoji){
+  document.querySelectorAll('#add-canvas-base .base-char-opt').forEach(function(e){e.classList.remove('sel');}); el.classList.add('sel');
+  addSelectedChar=emoji;
+  if(!addCtx) return;
+  addCtx.fillStyle='#fff'; addCtx.fillRect(0,0,278,160);
+  if(emoji){ addCtx.font='90px serif'; addCtx.textAlign='center'; addCtx.textBaseline='middle'; addCtx.fillText(emoji,139,80); addCtx.textAlign='start'; addCtx.textBaseline='alphabetic'; }
+  updateAddPreview();
+}
+function addAddSticker(s){ if(!addCtx) return; addCtx.font='38px serif'; addCtx.fillText(s,60+Math.random()*120,30+Math.random()*100); updateAddPreview(); }
+function switchAddCanvasTab(tab,el){
+  document.querySelectorAll('#scr-addidentity .canvas-tab').forEach(function(t){t.classList.remove('active');}); el.classList.add('active');
+  document.getElementById('add-canvas-draw').style.display=tab==='draw'?'block':'none';
+  document.getElementById('add-canvas-base').style.display=tab==='base'?'block':'none';
+  document.getElementById('add-canvas-sticker').style.display=tab==='sticker'?'block':'none';
+}
+function updateAddPreview(){
+  if(!addCtx) return;
+  var dataUrl=document.getElementById('add-draw-canvas').toDataURL('image/png');
+  var prev=document.getElementById('add-canvas-preview');
+  if(!prev) return;
+  prev.innerHTML=''; prev.style.padding='0';
+  var img=document.createElement('img'); img.src=dataUrl;
+  img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:18px;display:block;';
+  prev.appendChild(img);
+}
+
+function updateAddStep(){
+  for(var i=0;i<3;i++){
+    document.getElementById('add-step'+i).style.display = i===addStep?'block':'none';
+    document.getElementById('add-pip'+i).classList.toggle('done', i<=addStep);
+  }
+  document.getElementById('add-id-topbar-title').textContent = addStepTitles[addStep];
+  document.getElementById('add-id-next-btn').textContent = addStep===2?'아이덴티티 완성!':'다음';
+}
+
+function addIdentityNext(){
+  if(addStep < 2){ addStep++; updateAddStep(); }
+  else { saveNewIdentity(); }
+}
+
+function cancelAddIdentity(){
+  show(screens[currentScreen-1]||'scr-home', 'scr-addidentity');
+  addCtx=null; addStep=0;
+}
+
+function saveNewIdentity(){
+  var nick = document.getElementById('add-inp-nick').value.trim() || ('나의_아이덴티티_'+(identities.length+1));
+  var bio  = document.getElementById('add-inp-bio').value.trim() || '';
+  var els  = document.querySelectorAll('#add-val-tags .tag.sel');
+  var tags = []; els.forEach(function(el){ tags.push(el.textContent); });
+  var dataUrl = addCtx ? document.getElementById('add-draw-canvas').toDataURL('image/png') : null;
+
+  var newId = {
+    id: Date.now(),
+    nick: nick,
+    char: addSelectedChar || '🐻',
+    charDataUrl: dataUrl,
+    bio: bio,
+    tags: tags,
+    notifCount: 0,
+    friends: [],
+    posts: []
+  };
+  identities.push(newId);
+
+  // 새 아이덴티티로 전환
+  activeIdentityIdx = identities.length - 1;
+  selectedNick = newId.nick;
+  selectedChar = newId.char;
+  selectedIdentityTags = newId.tags.slice();
+  document.getElementById('profile-bio').textContent = newId.bio || '나를 한 문장으로 표현하면?';
+  updateProfiles();
+  updateTabIdentityBtn();
+  updateNotifDots();
+
+  // 초기화
+  addCtx=null; addStep=0;
+  show('scr-home','scr-addidentity');
+}
+
+/* addIdentity 재정의 — 전용 화면으로 이동 */
+function addIdentity(bypass){
+  if(!bypass && identities.length >= 2){ showPurchaseSheet(); return; }
+  closeIdentitySheet();
+  addStep=0; addCtx=null; addSelectedChar='🐻';
+  // 태그 초기화
+  document.querySelectorAll('#add-val-tags .tag').forEach(function(el){el.classList.remove('sel');});
+  document.getElementById('add-inp-nick').value='';
+  document.getElementById('add-inp-bio').value='';
+  updateAddStep();
+  show('scr-addidentity', screens[currentScreen]);
+  setTimeout(function(){ initAddCanvas(); }, 100);
+}
+
+/* ── 다중 아이덴티티 악용 방지 ── */
+
+// 현재 활성 아이덴티티의 친구 accountId 목록 반환
+function getActiveFriendAccountIds(){
+  var aid = getActiveIdentity();
+  if(aid.friends && aid.friends.length > 0){
+    return aid.friends.map(function(f){ return f.accountId; });
+  }
+  // 샘플 데이터: 첫 번째 아이덴티티는 dmList의 친구들과 연결됨
+  if(activeIdentityIdx === 0){
+    return dmList.map(function(dm){ return dm.accountId; });
+  }
+  return [];
+}
+
+// 다른 아이덴티티들의 친구 accountId 목록 반환
+function getOtherIdentityFriendAccountIds(){
+  var result = [];
+  identities.forEach(function(id, idx){
+    if(idx === activeIdentityIdx) return;
+    var friendIds = (id.friends && id.friends.length > 0)
+      ? id.friends.map(function(f){ return f.accountId; })
+      : (idx === 0 ? dmList.map(function(dm){ return dm.accountId; }) : []);
+    result = result.concat(friendIds);
+  });
+  return result;
+}
+
+// 친구 요청 차단 체크
+// targetAccountId: 친구 요청 보내려는 유저의 accountId
+function checkFriendRequestBlock(targetAccountId, targetName){
+  var otherIds = getOtherIdentityFriendAccountIds();
+  if(otherIds.indexOf(targetAccountId) !== -1){
+    // 다른 아이덴티티에 이미 친구 → 차단
+    var otherIdName = '';
+    identities.forEach(function(id, idx){
+      if(idx === activeIdentityIdx) return;
+      var friendIds = (id.friends && id.friends.length > 0)
+        ? id.friends.map(function(f){ return f.accountId; })
+        : (idx === 0 ? dmList.map(function(dm){ return dm.accountId; }) : []);
+      if(friendIds.indexOf(targetAccountId) !== -1) otherIdName = '@'+id.nick;
+    });
+    var desc = document.getElementById('friend-block-desc');
+    if(desc) desc.innerHTML = '<strong>' + (targetName||targetAccountId) + '</strong> 은(는) 이미 다른 아이덴티티 <strong>' + otherIdName + '</strong>의 친구예요.<br><br>동일한 유저에게 여러 아이덴티티로 친구 요청을 보낼 수 없어요.';
+    document.getElementById('friend-block-modal').classList.add('open');
+    return true; // 차단됨
+  }
+  return false; // 허용
+}
+
+// 그룹 채팅 입장 차단 체크
+function checkGroupChatBlock(roomId){
+  // 샘플: roomId가 이미 다른 아이덴티티에 있는지 확인
+  var blocked = false;
+  identities.forEach(function(id, idx){
+    if(idx === activeIdentityIdx) return;
+    if(id.joinedRooms && id.joinedRooms.indexOf(roomId) !== -1) blocked = true;
+  });
+  if(blocked){
+    document.getElementById('group-block-modal').classList.add('open');
+    return true;
+  }
+  return false;
+}
+
+function closeFriendBlockModal(){
+  document.getElementById('friend-block-modal').classList.remove('open');
+}
+function closeGroupBlockModal(){
+  document.getElementById('group-block-modal').classList.remove('open');
+}
+
+// 채팅 차단 배너 표시
+function showChatBlockBanner(msg){
+  var banner = document.getElementById('chat-block-banner');
+  var text   = document.getElementById('chat-block-banner-text');
+  if(banner && text){
+    text.textContent = msg;
+    banner.classList.remove('hidden');
+  }
+}
+function hideChatBlockBanner(){
+  var banner = document.getElementById('chat-block-banner');
+  if(banner) banner.classList.add('hidden');
+}
+
+// openChat 래핑 — 1:1 DM도 다른 아이덴티티로 이미 대화 중인지 체크
+function checkDmBlock(dmIdx){
+  var dm = dmList[dmIdx];
+  if(!dm) return false;
+  var otherIds = getOtherIdentityFriendAccountIds();
+  if(otherIds.indexOf(dm.accountId) !== -1){
+    showChatBlockBanner('⚠️ 다른 아이덴티티로도 이 유저와 친구 관계예요. 현재 아이덴티티로만 대화할 수 있어요.');
+    return false; // 차단은 아니고 경고만 (이미 친구라 DM은 허용하되 배너 표시)
+  }
+  hideChatBlockBanner();
+  return false;
+}
+
+/* ── 결제/구독 시트 ── */
+var selectedPlan = 'onetime';
+
+function showSubscribePrompt(){
+  document.getElementById('identity-sheet').classList.remove('open');
+  document.getElementById('identity-backdrop').classList.remove('open');
+  selectedPlan = 'subscribe'; // 3개 이상은 구독만
+  updatePurchaseSheet(true);
+  document.getElementById('subscribe-sheet').classList.add('open');
+  document.getElementById('subscribe-backdrop').classList.add('open');
+}
+
+function showPurchaseSheet(){
+  document.getElementById('identity-sheet').classList.remove('open');
+  document.getElementById('identity-backdrop').classList.remove('open');
+  selectedPlan = 'onetime';
+  updatePurchaseSheet(false);
+  document.getElementById('subscribe-sheet').classList.add('open');
+  document.getElementById('subscribe-backdrop').classList.add('open');
+}
+
+function updatePurchaseSheet(subscribeOnly){
+  var oneTimeCard = document.getElementById('plan-onetime');
+  var subscribeCard = document.getElementById('plan-subscribe');
+  var confirmBtn = document.getElementById('purchase-confirm-btn');
+  var title = document.getElementById('purchase-sheet-title');
+  if(subscribeOnly){
+    // 3개 이상: 구독만 가능, 일회결제 비활성
+    if(oneTimeCard) oneTimeCard.style.opacity='0.4';
+    if(oneTimeCard) oneTimeCard.style.pointerEvents='none';
+    if(title) title.textContent='구독으로 더 많은 아이덴티티';
+    selectedPlan='subscribe';
+    if(subscribeCard) subscribeCard.classList.add('active-plan');
+    if(oneTimeCard) oneTimeCard.classList.remove('active-plan');
+    if(confirmBtn) confirmBtn.textContent='₩19,000/월 구독 시작';
+  } else {
+    if(oneTimeCard) oneTimeCard.style.opacity='1';
+    if(oneTimeCard) oneTimeCard.style.pointerEvents='auto';
+    if(title) title.textContent='아이덴티티 추가하기';
+    selectedPlan='onetime';
+    if(oneTimeCard) oneTimeCard.classList.add('active-plan');
+    if(subscribeCard) subscribeCard.classList.remove('active-plan');
+    if(confirmBtn) confirmBtn.textContent='₩12,000 결제하기';
+  }
+}
+
+function selectPlan(plan){
+  selectedPlan = plan;
+  var oneTimeCard = document.getElementById('plan-onetime');
+  var subscribeCard = document.getElementById('plan-subscribe');
+  var confirmBtn = document.getElementById('purchase-confirm-btn');
+  if(oneTimeCard) oneTimeCard.classList.toggle('active-plan', plan==='onetime');
+  if(subscribeCard) subscribeCard.classList.toggle('active-plan', plan==='subscribe');
+  if(confirmBtn) confirmBtn.textContent = plan==='onetime' ? '₩12,000 결제하기' : '₩19,000/월 구독 시작';
+}
+
+function confirmPurchase(){
+  closePurchaseSheet();
+  if(selectedPlan==='onetime'){
+    alert('결제가 완료됐어요! (프로토타입)\n새 아이덴티티를 만들어보세요.');
+    setTimeout(function(){ addIdentity(true); }, 300);
+  } else {
+    alert('구독이 시작됐어요! (프로토타입)\n이제 아이덴티티를 최대 5개까지 만들 수 있어요.');
+    setTimeout(function(){ addIdentity(true); }, 300);
+  }
+}
+
+function closePurchaseSheet(){
+  document.getElementById('subscribe-sheet').classList.remove('open');
+  document.getElementById('subscribe-backdrop').classList.remove('open');
+}
+function closeSubscribeSheet(){ closePurchaseSheet(); }
+
+/* ── i18n 번역 사전 ── */
+var i18n = {
+  ko: {
+    /* 탭바 */
+    tab_home:'홈', tab_explore:'둘러보기', tab_messages:'메세지', tab_myinfo:'내 정보',
+    /* 홈 */
+    home_journey:'My Journey', home_edit:'편집',
+    /* 둘러보기 */
+    explore_title:'둘러보기', explore_placeholder:'캐릭터, #태그, 유저 검색',
+    /* 메세지 */
+    msg_title:'메세지', msg_friends:'친구 업데이트', msg_chats:'대화',
+    /* 내 정보 */
+    profile_title:'내 정보', profile_tab:'프로필', settings_tab:'설정',
+    /* 설정 */
+    s_screen:'화면', s_darkmode:'다크 모드', s_darkmode_desc:'어두운 테마로 전환해요',
+    s_language:'언어',
+    s_notifications:'알림', s_push:'푸시 알림', s_push_desc:'새 메세지, 친구 요청 알림',
+    s_msg_notif:'메세지 알림', s_friend_notif:'친구 요청 알림',
+    s_privacy:'공개 설정', s_profile_public:'프로필 공개', s_profile_public_desc:'누구나 내 프로필을 볼 수 있어요',
+    s_post_public:'포스트 공개', s_post_public_desc:'둘러보기에 내 포스트 노출',
+    s_account:'계정 관리', s_email:'이메일 변경', s_password:'비밀번호 변경',
+    s_export:'데이터 내보내기', s_export_desc:'내 기록을 파일로 저장해요',
+    s_account2:'계정', s_logout:'로그아웃', s_delete:'계정 삭제', s_delete_desc:'모든 데이터가 영구 삭제돼요',
+    s_version:'버전 0.1.0 (프로토타입)',
+    /* 프로필 */
+    p_tags_label:'나를 표현하는 태그', p_friends:'친구', p_chatting:'대화 중',
+    /* 편집 */
+    edit_title:'프로필 편집', edit_save:'저장', edit_avatar_hint:'아이콘을 탭해서 변경하거나 아래서 직접 편집하세요',
+    edit_nick:'닉네임', edit_bio:'한 줄 소개', edit_bio_ph:'나를 한 문장으로 표현하면?',
+    edit_tags_label:'나를 표현하는 태그', edit_tags_desc:'내 프로필에서만 보여요 · 여러 개 선택 가능',
+    /* 캔버스 */
+    cv_draw:'✏️ 그리기', cv_base:'🐾 베이스', cv_sticker:'✨ 스티커',
+    cv_animal:'동물형', cv_human:'인간형', cv_fantasy:'판타지형', cv_object:'오브젝트형',
+    cv_emotion:'감정', cv_nature:'날씨·자연', cv_item:'아이템',
+    /* 회원가입 */
+    step0_title:'계정 만들기', step1_title:'캐릭터 캔버스', step2_title:'아이덴티티 태그',
+    signup_nick:'닉네임', signup_email:'이메일', signup_pw:'비밀번호',
+    signup_char_title:'나만의 캐릭터를 만들어요',
+    signup_tags_title:'나를 표현하는 단어들', signup_tags_desc:'선택한 태그는 내 프로필에서만 보여요',
+    signup_bio:'한 줄 소개', signup_next:'다음', signup_done:'캐릭터 완성!',
+    /* 포스트 작성 */
+    post_title:'새 포스트', post_placeholder:'지금 어떤 생각을 하고 있나요? (최대 200자)',
+    post_photo:'사진 추가', post_video:'동영상 추가',
+    post_hashtag:'해시태그', post_tag_ph:'#태그 입력', post_submit:'포스트 올리기',
+    /* 시작 화면 */
+    gate_tagline:'나를 표현하는 나만의 캔버스',
+    gate_start:'시작하기 — 캐릭터 만들기', gate_login:'자동 로그인으로 시작',
+    gate_already:'이미 계정이 있어요',
+    /* 탭 힌트 */
+    tap_hint:'탭해서 프로필 보기',
+    /* 채팅 */
+    chat_placeholder:'메세지 입력...',
+  },
+  en: {
+    tab_home:'Home', tab_explore:'Explore', tab_messages:'Messages', tab_myinfo:'Me',
+    home_journey:'My Journey', home_edit:'Edit',
+    explore_title:'Explore', explore_placeholder:'Search characters, #tags, users',
+    msg_title:'Messages', msg_friends:'Friend Updates', msg_chats:'Chats',
+    profile_title:'My Info', profile_tab:'Profile', settings_tab:'Settings',
+    s_screen:'Display', s_darkmode:'Dark Mode', s_darkmode_desc:'Switch to dark theme',
+    s_language:'Language',
+    s_notifications:'Notifications', s_push:'Push Notifications', s_push_desc:'New messages, friend requests',
+    s_msg_notif:'Message Alerts', s_friend_notif:'Friend Request Alerts',
+    s_privacy:'Privacy', s_profile_public:'Public Profile', s_profile_public_desc:'Anyone can view your profile',
+    s_post_public:'Public Posts', s_post_public_desc:'Show posts in Explore',
+    s_account:'Account', s_email:'Change Email', s_password:'Change Password',
+    s_export:'Export Data', s_export_desc:'Save your records as a file',
+    s_account2:'Account', s_logout:'Log Out', s_delete:'Delete Account', s_delete_desc:'All data will be permanently deleted',
+    s_version:'Version 0.1.0 (Prototype)',
+    p_tags_label:'My Identity Tags', p_friends:'Friends', p_chatting:'Chatting',
+    edit_title:'Edit Profile', edit_save:'Save', edit_avatar_hint:'Tap icon to change or draw below',
+    edit_nick:'Nickname', edit_bio:'Bio', edit_bio_ph:'Describe yourself in one sentence',
+    edit_tags_label:'My Identity Tags', edit_tags_desc:'Only visible on your profile · Select multiple',
+    cv_draw:'✏️ Draw', cv_base:'🐾 Base', cv_sticker:'✨ Sticker',
+    cv_animal:'Animal', cv_human:'Human', cv_fantasy:'Fantasy', cv_object:'Object',
+    cv_emotion:'Emotion', cv_nature:'Weather·Nature', cv_item:'Items',
+    step0_title:'Create Account', step1_title:'Character Canvas', step2_title:'Identity Tags',
+    signup_nick:'Nickname', signup_email:'Email', signup_pw:'Password',
+    signup_char_title:'Create your character',
+    signup_tags_title:'Words that describe you', signup_tags_desc:'Tags are only visible on your profile',
+    signup_bio:'Bio', signup_next:'Next', signup_done:'Finish!',
+    post_title:'New Post', post_placeholder:"What's on your mind? (max 200 chars)",
+    post_photo:'Add Photo', post_video:'Add Video',
+    post_hashtag:'Hashtags', post_tag_ph:'#enter tag', post_submit:'Post',
+    gate_tagline:'Your canvas, your identity',
+    gate_start:'Get Started — Create Character', gate_login:'Continue with Auto Login',
+    gate_already:'Already have an account',
+    tap_hint:'Tap to view profile',
+    chat_placeholder:'Type a message...',
+  },
+  ja: {
+    tab_home:'ホーム', tab_explore:'探す', tab_messages:'メッセージ', tab_myinfo:'マイページ',
+    home_journey:'マイジャーニー', home_edit:'編集',
+    explore_title:'探す', explore_placeholder:'キャラクター、#タグ、ユーザーを検索',
+    msg_title:'メッセージ', msg_friends:'友達の更新', msg_chats:'トーク',
+    profile_title:'マイページ', profile_tab:'プロフィール', settings_tab:'設定',
+    s_screen:'画面', s_darkmode:'ダークモード', s_darkmode_desc:'ダークテーマに切替',
+    s_language:'言語',
+    s_notifications:'通知', s_push:'プッシュ通知', s_push_desc:'新着メッセージ・友達リクエスト',
+    s_msg_notif:'メッセージ通知', s_friend_notif:'友達リクエスト通知',
+    s_privacy:'公開設定', s_profile_public:'プロフィール公開', s_profile_public_desc:'誰でも見られます',
+    s_post_public:'投稿公開', s_post_public_desc:'探すに表示する',
+    s_account:'アカウント管理', s_email:'メール変更', s_password:'パスワード変更',
+    s_export:'データ書き出し', s_export_desc:'記録をファイルに保存',
+    s_account2:'アカウント', s_logout:'ログアウト', s_delete:'アカウント削除', s_delete_desc:'すべてのデータが削除されます',
+    s_version:'バージョン 0.1.0 (プロトタイプ)',
+    p_tags_label:'自己表現タグ', p_friends:'友達', p_chatting:'トーク中',
+    edit_title:'プロフィール編集', edit_save:'保存', edit_avatar_hint:'アイコンをタップして変更',
+    edit_nick:'ニックネーム', edit_bio:'一言自己紹介', edit_bio_ph:'一文で自分を表現してみて',
+    edit_tags_label:'自己表現タグ', edit_tags_desc:'プロフィールのみ表示',
+    cv_draw:'✏️ 描く', cv_base:'🐾 ベース', cv_sticker:'✨ スタンプ',
+    cv_animal:'動物', cv_human:'人間', cv_fantasy:'ファンタジー', cv_object:'オブジェクト',
+    cv_emotion:'感情', cv_nature:'天気・自然', cv_item:'アイテム',
+    step0_title:'アカウント作成', step1_title:'キャラクターキャンバス', step2_title:'アイデンティティタグ',
+    signup_nick:'ニックネーム', signup_email:'メール', signup_pw:'パスワード',
+    signup_char_title:'自分だけのキャラクターを作ろう',
+    signup_tags_title:'自分を表す言葉', signup_tags_desc:'タグはプロフィールのみ表示',
+    signup_bio:'一言自己紹介', signup_next:'次へ', signup_done:'完成！',
+    post_title:'新しい投稿', post_placeholder:'今何を思っていますか？(最大200文字)',
+    post_photo:'写真を追加', post_video:'動画を追加',
+    post_hashtag:'ハッシュタグ', post_tag_ph:'#タグを入力', post_submit:'投稿する',
+    gate_tagline:'自分を表現するキャンバス',
+    gate_start:'はじめる — キャラクター作成', gate_login:'自動ログインで続ける',
+    gate_already:'アカウントをお持ちの方',
+    tap_hint:'タップしてプロフィールを見る',
+    chat_placeholder:'メッセージを入力...',
+  },
+  zh: {
+    tab_home:'首页', tab_explore:'发现', tab_messages:'消息', tab_myinfo:'我的',
+    home_journey:'我的旅程', home_edit:'编辑',
+    explore_title:'发现', explore_placeholder:'搜索角色、#标签、用户',
+    msg_title:'消息', msg_friends:'好友动态', msg_chats:'对话',
+    profile_title:'我的', profile_tab:'资料', settings_tab:'设置',
+    s_screen:'显示', s_darkmode:'深色模式', s_darkmode_desc:'切换至深色主题',
+    s_language:'语言',
+    s_notifications:'通知', s_push:'推送通知', s_push_desc:'新消息、好友请求提醒',
+    s_msg_notif:'消息提醒', s_friend_notif:'好友请求提醒',
+    s_privacy:'隐私设置', s_profile_public:'公开资料', s_profile_public_desc:'所有人都能看到您的资料',
+    s_post_public:'公开帖子', s_post_public_desc:'在发现页面显示帖子',
+    s_account:'账号管理', s_email:'更改邮箱', s_password:'更改密码',
+    s_export:'导出数据', s_export_desc:'将记录保存为文件',
+    s_account2:'账号', s_logout:'退出登录', s_delete:'删除账号', s_delete_desc:'所有数据将被永久删除',
+    s_version:'版本 0.1.0 (原型)',
+    p_tags_label:'我的标签', p_friends:'好友', p_chatting:'聊天中',
+    edit_title:'编辑资料', edit_save:'保存', edit_avatar_hint:'点击头像更改或在下方绘制',
+    edit_nick:'昵称', edit_bio:'个人简介', edit_bio_ph:'用一句话描述自己',
+    edit_tags_label:'我的标签', edit_tags_desc:'仅在个人资料中显示',
+    cv_draw:'✏️ 绘画', cv_base:'🐾 基础', cv_sticker:'✨ 贴纸',
+    cv_animal:'动物', cv_human:'人物', cv_fantasy:'奇幻', cv_object:'物体',
+    cv_emotion:'情感', cv_nature:'天气·自然', cv_item:'道具',
+    step0_title:'创建账号', step1_title:'角色画布', step2_title:'身份标签',
+    signup_nick:'昵称', signup_email:'邮箱', signup_pw:'密码',
+    signup_char_title:'创建你的专属角色',
+    signup_tags_title:'描述你的词语', signup_tags_desc:'标签仅在个人资料中显示',
+    signup_bio:'个人简介', signup_next:'下一步', signup_done:'完成！',
+    post_title:'新帖子', post_placeholder:'现在在想什么？(最多200字)',
+    post_photo:'添加照片', post_video:'添加视频',
+    post_hashtag:'话题标签', post_tag_ph:'#输入标签', post_submit:'发布',
+    gate_tagline:'属于你的画布，表达你自己',
+    gate_start:'开始 — 创建角色', gate_login:'自动登录继续',
+    gate_already:'已有账号',
+    tap_hint:'点击查看资料',
+    chat_placeholder:'输入消息...',
+  }
+};
+
+var currentLang = 'ko';
+
+function t(key){ return (i18n[currentLang]&&i18n[currentLang][key]) || i18n.ko[key] || key; }
+
+/* i18n 대상 요소 맵 — [선택자, 속성(없으면 textContent)] */
+var i18nMap = [
+  /* 탭바 (모든 화면) */
+  ['#tabs-home .tab-item:nth-child(1)','tab_home'],
+  /* 동적으로 처리 */
+];
+
+function applyLang(){
+  var L = i18n[currentLang];
+  if(!L) return;
+
+  /* 헬퍼 */
+  function setText(sel, key){ var el=document.querySelector(sel); if(el) el.textContent=t(key); }
+  function setAttr(sel, attr, key){ var el=document.querySelector(sel); if(el) el.setAttribute(attr,t(key)); }
+  function setAll(sel, key){ document.querySelectorAll(sel).forEach(function(el){el.textContent=t(key);}); }
+
+  /* 모든 탭바의 탭 텍스트 */
+  document.querySelectorAll('.home-tabbar').forEach(function(bar){
+    var items=bar.querySelectorAll('.tab-item');
+    var keys=['tab_home','tab_explore','tab_messages','tab_myinfo'];
+    items.forEach(function(item,i){
+      var svg=item.querySelector('svg');
+      item.textContent='';
+      if(svg) item.appendChild(svg);
+      item.appendChild(document.createTextNode(t(keys[i])));
+    });
+  });
+
+  /* 각 화면 타이틀 */
+  setText('.s-explore .home-logo','explore_title');
+  setText('.s-messages .msg-topbar-title','msg_title');
+  setText('.s-profile .home-logo','profile_title');
+  setText('.s-home .journey-title','home_journey');
+
+  /* 홈 편집 버튼 */
+  document.querySelectorAll('.journey-hero-edit').forEach(function(el){
+    var svg=el.querySelector('svg'); el.textContent=''; if(svg) el.appendChild(svg);
+    el.appendChild(document.createTextNode(' '+t('home_edit')));
+  });
+
+  /* 내 정보 편집 버튼 */
+  var editBtn=document.querySelector('.s-profile .profile-edit-btn');
+  if(editBtn){ var svg=editBtn.querySelector('svg'); editBtn.textContent=''; if(svg) editBtn.appendChild(svg); editBtn.appendChild(document.createTextNode(' '+t('home_edit'))); }
+
+  /* 내 정보 탭 */
+  setText('#ptab-profile','profile_tab');
+  setText('#ptab-settings','settings_tab');
+
+  /* 메세지 */
+  setText('.friends-strip-label','msg_friends');
+  setText('.dm-section-label','msg_chats');
+
+  /* 설정 섹션 */
+  var sl=document.querySelectorAll('.settings-section-label');
+  var slKeys=['s_screen','s_notifications','s_privacy','s_account','s_account2'];
+  sl.forEach(function(el,i){ if(slKeys[i]) el.textContent=t(slKeys[i]); });
+
+  var items=document.querySelectorAll('.settings-item');
+  if(items.length>=10){
+    var itemMap=[
+      [0,'s_darkmode','s_darkmode_desc'], [1,'s_language',null],
+      [2,'s_push','s_push_desc'], [3,'s_msg_notif',null], [4,'s_friend_notif',null],
+      [5,'s_profile_public','s_profile_public_desc'], [6,'s_post_public','s_post_public_desc'],
+      [7,'s_email',null], [8,'s_password',null], [9,'s_export','s_export_desc'],
+      [10,'s_logout',null], [11,'s_delete','s_delete_desc'],
+    ];
+    itemMap.forEach(function(m){
+      var item=items[m[0]]; if(!item) return;
+      var label=item.querySelector('.settings-row-label');
+      var desc=item.querySelector('.settings-row-desc');
+      if(label && !label.classList.contains('settings-danger')) label.textContent=t(m[1]);
+      if(desc && m[2]) desc.textContent=t(m[2]);
+    });
+    // 계정 삭제 (danger)
+    var del=items[11]; if(del){ var dl=del.querySelector('.settings-danger'); if(dl) dl.textContent=t('s_delete'); var dd=del.querySelector('.settings-row-desc'); if(dd) dd.textContent=t('s_delete_desc'); }
+  }
+
+  /* 버전 */
+  var verEl=document.querySelector('.settings-body > div:last-child');
+  if(verEl) verEl.textContent=t('s_version');
+
+  /* 프로필 */
+  setText('.identity-tag-label','p_tags_label');
+  setText('.profile-section-title','p_friends');
+  document.querySelectorAll('.friend-stat-lbl').forEach(function(el,i){
+    el.textContent = i===0 ? t('p_friends') : t('p_chatting');
+  });
+
+  /* 편집 화면 */
+  setText('.s-editprofile .topbar-title','edit_title');
+  var saveBtn=document.querySelector('.s-editprofile .topbar button:last-child');
+  if(saveBtn) saveBtn.textContent=t('edit_save');
+  setText('.edit-avatar-hint','edit_avatar_hint');
+  document.querySelectorAll('.edit-field-label').forEach(function(el,i){
+    var keys=['edit_nick','edit_bio','edit_tags_label'];
+    if(keys[i]) el.textContent=t(keys[i]);
+  });
+  var editTagDesc=document.querySelector('.edit-field-section:last-of-type > div:first-of-type + div');
+  if(editTagDesc && editTagDesc.style.fontSize==='11px') editTagDesc.textContent=t('edit_tags_desc');
+
+  /* 캔버스 탭 */
+  document.querySelectorAll('.canvas-tab, .edit-canvas-tab').forEach(function(el,i){
+    var keys=['cv_draw','cv_base','cv_sticker'];
+    if(keys[i%3]) el.textContent=t(keys[i%3]);
+  });
+
+  /* 카테고리 라벨 */
+  document.querySelectorAll('.base-cat-label').forEach(function(el,i){
+    var keys=['cv_animal','cv_human','cv_fantasy','cv_object','cv_fantasy','cv_object'];
+    if(keys[i]) el.textContent=t(keys[i]);
+  });
+
+  /* 검색창 */
+  setAttr('.search-bar','placeholder','explore_placeholder');
+
+  /* 채팅 입력 */
+  setAttr('#chat-input-field','placeholder','chat_placeholder');
+
+  /* 회원가입 스텝 타이틀 */
+  var stepTitles=[t('step0_title'),t('step1_title'),t('step2_title')];
+  window._stepTitles=stepTitles; // updateSignupStep이 참조
+  setText('#signup-topbar-title', signupStep===0?'step0_title':signupStep===1?'step1_title':'step2_title');
+
+  /* 시작 화면 */
+  setText('.gate-tagline','gate_tagline');
+  document.querySelectorAll('.gate-bottom .btn-primary').forEach(function(el){ el.textContent=t('gate_start'); });
+  document.querySelectorAll('.gate-bottom .btn-secondary').forEach(function(el){ el.textContent=t('gate_login'); });
+  setText('.div-text','gate_already');
+  setText('.splash-sub','gate_tagline');
+
+  /* 포스트 작성 */
+  var postTopTitle=document.querySelector('.s-newpost .topbar-title');
+  if(postTopTitle) postTopTitle.textContent=t('post_title');
+  setAttr('#post-text','placeholder','post_placeholder');
+  var mediaBtns=document.querySelectorAll('.post-media-btn');
+  if(mediaBtns[0]){ var s0=mediaBtns[0].querySelector('svg'); mediaBtns[0].textContent=''; if(s0) mediaBtns[0].appendChild(s0); mediaBtns[0].appendChild(document.createTextNode(' '+t('post_photo'))); }
+  if(mediaBtns[1]){ var s1=mediaBtns[1].querySelector('svg'); mediaBtns[1].textContent=''; if(s1) mediaBtns[1].appendChild(s1); mediaBtns[1].appendChild(document.createTextNode(' '+t('post_video'))); }
+  setText('.post-tag-section-label','post_hashtag');
+  setAttr('#post-tag-inp','placeholder','post_tag_ph');
+  setText('.post-submit-btn','post_submit');
+
+  /* 탭 힌트 */
+  document.querySelectorAll('.tap-hint').forEach(function(el){
+    var svg=el.querySelector('svg'); el.textContent=''; if(svg) el.appendChild(svg);
+    el.appendChild(document.createTextNode(' '+t('tap_hint')));
+  });
+}
+
+function changeLang(lang){
+  currentLang = lang;
+  applyLang();
+}
+
+
+/* ── 포스트 작성 ── */
+var postTags=[];
+var postMediaItems=[];
+
+function openNewPost(){
+  document.getElementById('post-text').value='';
+  document.getElementById('post-char-count').textContent='0 / 200';
+  document.getElementById('post-char-count').classList.remove('warn');
+  document.getElementById('post-media-preview').innerHTML='';
+  document.getElementById('post-tags-row').innerHTML='';
+  document.getElementById('post-tag-inp').value='';
+  postTags=[]; postMediaItems=[];
+  // 포스트 작성 아이덴티티 표시 업데이트
+  var aid = getActiveIdentity();
+  var pav = document.getElementById('post-id-avatar');
+  var pnm = document.getElementById('post-id-name');
+  if(pav){
+    pav.innerHTML='';
+    if(aid.charDataUrl){ var img=document.createElement('img'); img.src=aid.charDataUrl; img.style.cssText='width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;'; pav.appendChild(img); }
+    else { pav.textContent = aid.char; }
+  }
+  if(pnm) pnm.textContent = '@' + aid.nick + ' 으로 올리기';
+  show('scr-newpost','scr-explore');
+}
+
+function updateCharCount(el){
+  var len=el.value.length;
+  var cc=document.getElementById('post-char-count');
+  cc.textContent=len+' / 200';
+  cc.classList.toggle('warn',len>=180);
+}
+
+var mediaEmojis={photo:['🌄','🌸','🌿','🎨','🌙','⭐','🦊','🌈'],video:['🎬','📹','🎥','🎞️']};
+function addMedia(type){
+  if(postMediaItems.length>=4){ alert('최대 4개까지 추가할 수 있어요'); return; }
+  var arr=mediaEmojis[type];
+  var emoji=arr[Math.floor(Math.random()*arr.length)];
+  var id='media-'+Date.now();
+  postMediaItems.push({id:id,type:type,emoji:emoji});
+  renderMediaPreview();
+}
+function removeMedia(id){
+  postMediaItems=postMediaItems.filter(function(m){return m.id!==id;});
+  renderMediaPreview();
+}
+function renderMediaPreview(){
+  var el=document.getElementById('post-media-preview');
+  el.innerHTML='';
+  postMediaItems.forEach(function(m){
+    var wrap=document.createElement('div'); wrap.className='post-media-thumb';
+    wrap.style.background=m.type==='photo'?'#EEEDFE':'#E8E6FF';
+    wrap.textContent=m.emoji;
+    var rm=document.createElement('button'); rm.className='remove'; rm.textContent='×';
+    rm.onclick=function(){removeMedia(m.id);};
+    wrap.appendChild(rm); el.appendChild(wrap);
+  });
+}
+
+function addPostTag(){
+  var inp=document.getElementById('post-tag-inp');
+  var val=inp.value.trim().replace(/^#*/,'');
+  if(!val) return;
+  if(postTags.length>=10){alert('태그는 최대 10개까지 추가할 수 있어요'); return;}
+  postTags.push(val); inp.value='';
+  renderPostTags();
+}
+function removePostTag(t){
+  postTags=postTags.filter(function(x){return x!==t;});
+  renderPostTags();
+}
+function renderPostTags(){
+  var row=document.getElementById('post-tags-row'); row.innerHTML='';
+  postTags.forEach(function(t){
+    var chip=document.createElement('div'); chip.className='post-tag-chip';
+    chip.textContent='#'+t;
+    var rm=document.createElement('button'); rm.textContent='×';
+    rm.onclick=(function(tag){return function(){removePostTag(tag);};})(t);
+    chip.appendChild(rm);
+    row.appendChild(chip);
+  });
+}
+
+function submitPost(){
+  var text=document.getElementById('post-text').value.trim();
+  if(!text){alert('내용을 입력해주세요'); return;}
+  var newPost={
+    emoji: selectedChar||'🦊',
+    user: '@'+(selectedNick||'yourname'),
+    bg: '#EEEDFE',
+    caption: text,
+    postTags: postTags.map(function(t){return '#'+t;}),
+    h: 120+Math.floor(Math.random()*60)
+  };
+  posts.unshift(newPost);
+  document.getElementById('masonry-grid').innerHTML='';
+  buildMasonry();
+  // Journey에 포스트 추가
+  addJourneyItem('post', text, postTags.map(function(t){return '#'+t;}), postMediaItems.length>0);
+  show('scr-explore','scr-newpost');
+}
+
+/* ── 아코디언 토글 ── */
+function toggleTl(item){
+  var detail=item.querySelector('.tl-detail');
+  var chevron=item.querySelector('.tl-row-chevron');
+  if(!detail) return;
+  var isOpen=detail.classList.contains('open');
+  detail.classList.toggle('open',!isOpen);
+  if(chevron) chevron.classList.toggle('open',!isOpen);
+}
+
+function addJourneyItem(type, text, tags, hasMedia){
+  var timeline=document.getElementById('journey-timeline');
+  if(!timeline) return;
+
+  var typeMap={post:{rowClass:'post-row',icon:'✏️',dotClass:'post'},char:{rowClass:'char-row',icon:'🦊',dotClass:'char'},tag:{rowClass:'tag-row',icon:'🏷️',dotClass:'tag'}};
+  var t=typeMap[type]||typeMap.post;
+  var shortText=text.length>22?text.slice(0,22)+'…':text;
+
+  var item=document.createElement('div'); item.className='tl-item'; item.onclick=function(){toggleTl(item);};
+
+  var dot=document.createElement('div'); dot.className='tl-dot '+t.dotClass;
+
+  var row=document.createElement('div'); row.className='tl-row '+t.rowClass;
+  var iconEl=document.createElement('div'); iconEl.className='tl-row-icon '+t.dotClass; iconEl.textContent=t.icon;
+  var rowText=document.createElement('div'); rowText.className='tl-row-text';
+  var title=document.createElement('div'); title.className='tl-row-title'; title.textContent=shortText;
+  var date=document.createElement('div'); date.className='tl-row-date'; date.textContent='방금';
+  rowText.appendChild(title); rowText.appendChild(date);
+  var chev=document.createElement('div'); chev.innerHTML='<svg class="tl-row-chevron icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>';
+  row.appendChild(iconEl); row.appendChild(rowText); row.appendChild(chev);
+
+  var detail=document.createElement('div'); detail.className='tl-detail';
+  var inner=document.createElement('div'); inner.className='tl-detail-inner '+t.dotClass;
+
+  if(type==='post'){
+    var pt=document.createElement('div'); pt.className='tl-post-text'; pt.textContent=text; inner.appendChild(pt);
+    if(hasMedia){ var mi=document.createElement('div'); mi.className='tl-post-img'; mi.textContent='🖼️'; inner.appendChild(mi); }
+    if(tags&&tags.length){ var tr=document.createElement('div'); tr.className='tl-post-tags'; tags.forEach(function(tg){var d=document.createElement('div');d.className='tl-post-tag';d.textContent=tg;tr.appendChild(d);}); inner.appendChild(tr); }
+  } else if(type==='char'){
+    var cb=document.createElement('div'); cb.className='tl-char-body';
+    var cth=document.createElement('div'); cth.className='tl-char-thumb'; cth.textContent=selectedChar||'🦊';
+    var cd=document.createElement('div'); cd.className='tl-char-desc'; cd.textContent=text;
+    cb.appendChild(cth); cb.appendChild(cd); inner.appendChild(cb);
+  } else {
+    var tc=document.createElement('div'); tc.className='tl-tag-chips';
+    (tags||[]).forEach(function(tg){var d=document.createElement('div');d.className='tl-tag-chip new';d.textContent=tg;tc.appendChild(d);}); inner.appendChild(tc);
+  }
+  detail.appendChild(inner);
+  item.appendChild(dot); item.appendChild(row); item.appendChild(detail);
+  timeline.insertBefore(item, timeline.firstChild);
+}
+
+function buildMasonry(){ var grid=document.getElementById('masonry-grid'); if(grid.children.length>0) return; posts.forEach(function(p){ var tile=document.createElement('div'); tile.className='tile'; var img=document.createElement('div'); img.className='tile-img'; img.style.cssText='height:'+p.h+'px;background:'+p.bg+';'; img.textContent=p.emoji; var body=document.createElement('div'); body.className='tile-body'; var ar=document.createElement('div'); ar.className='tile-avatar-row'; var av=document.createElement('div'); av.className='tile-avatar'; av.style.background=p.bg; av.textContent=p.emoji; var un=document.createElement('div'); un.className='tile-username'; un.textContent=p.user; ar.appendChild(av); ar.appendChild(un); var cap=document.createElement('div'); cap.className='tile-caption'; cap.textContent=p.caption; var tr=document.createElement('div'); tr.className='tile-post-tags'; p.postTags.forEach(function(t){ var d=document.createElement('div'); d.className='tile-post-tag'; d.textContent=t; tr.appendChild(d); }); body.appendChild(ar); body.appendChild(cap); body.appendChild(tr); tile.appendChild(img); tile.appendChild(body); grid.appendChild(tile); }); }
+
+setTimeout(function(){ document.getElementById('splash-bar').style.width='100%'; setTimeout(function(){ show('scr-gate','scr-splash'); },2200); },100); updateTabIdentityBtn();
+initCanvas();
+setTimeout(function(){
+  if(ctx){
+    ctx.font='90px serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText('🦊',139,80);
+    ctx.textAlign='start'; ctx.textBaseline='alphabetic';
+    updateCanvasPreview();
+  }
+},200);
+</script>
+</body>
+</html>
